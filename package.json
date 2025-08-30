@@ -2,5 +2,8 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.56.0",
     "multer": "^2.0.2"
+  },
+  "scripts": {
+    "start": "node index.js"
   }
 }
