@@ -55,6 +55,10 @@ if (typeof contactRoutes === 'function') {
     console.error('contactRoutes is not a function. Check the export in contactRoutes.js.');
 }
 
+app.get('/', (req, res) => {
+  res.send('Server is running');
+});
+
 // Serve static files from the 'public' directory
 app.use(express.static('public'));
 
@@ -66,5 +70,5 @@ app.use((err, req, res, next) => {
 
 // Start the server
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    console.log('Server started');
 });
