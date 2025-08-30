@@ -1,11 +1,12 @@
-const express = require('express');
+import express from 'express';
+import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+
 const router = express.Router();
-const multer = require('multer');
-const { v4: uuidv4 } = require('uuid');
-const path = require('path');
 
 // This module now exports a function that accepts the Supabase client
-module.exports = function(supabase) {
+export default function(supabase) {
 
     // Configure Multer for file uploads
     const upload = multer({ storage: multer.memoryStorage() });
@@ -394,4 +395,4 @@ module.exports = function(supabase) {
     });
 
     return router; // Return the router for the main app to use
-};
+}
