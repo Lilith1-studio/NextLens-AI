@@ -1,0 +1,2549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Network</title>
+    <!-- Tailwind CDN --> <script src="https://cdn.tailwindcss.com"></script> <style> body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; } .hamburger-menu-links.closed { transform: translateX(100%); } .hamburger-menu-links { transition: transform 0.3s ease-in-out; } </style>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <!-- Font for a clean look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom scrollbar for chat messages */
+        .chat-messages-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-messages-container::-webkit-scrollbar-thumb {
+            background-color: #d1d5db;
+            border-radius: 4px;
+        }
+        .chat-messages-container::-webkit-scrollbar-track {
+            background-color: transparent;
+        }
+
+        /* Custom modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 99999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 1rem;
+            text-align: center;
+        }
+
+        /* Styles for the chat options dropdown menu */
+        #chat-options-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 8px;
+            padding: 8px;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 150px;
+            z-index: 60;
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            transform-origin: top right;
+        }
+        /* New class to explicitly show the menu */
+        #chat-options-menu.show-menu {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+        .chat-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            border-radius: 0.75rem;
+            transition: background-color 0.15s ease-in-out;
+            white-space: nowrap;
+        }
+        .chat-option:hover {
+            background-color: #f3f4f6;
+        }
+        .chat-option:not(:last-child) {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .chat-option.danger {
+            color: #ef4444;
+        }
+
+        /* New styles for the message options modal */
+        #message-options-modal {
+            position: absolute;
+            z-index: 50;
+            padding: 8px;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 200px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            transform-origin: top left;
+        }
+        #message-options-modal.show-menu {
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+        .message-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+            border-radius: 0.75rem;
+            transition: background-color 0.15s ease-in-out;
+            white-space: nowrap;
+        }
+        .message-option:hover {
+            background-color: #f3f4f6;
+        }
+        .message-option:not(:last-child) {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .message-option.danger {
+            color: #ef4444;
+        }
+        
+        /* New styles for the toast notification */
+        #toast-container {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+        .toast {
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px; /* Pill shape */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            transform: translateY(20px);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* New styles for the reply bar and edit bar */
+        .reply-bar-container {
+            background-color: #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            transition: all 0.3s ease-in-out;
+        }
+        .edit-bar-container {
+            background-color: #d1e2f3; /* A lighter blue to distinguish from reply */
+            border-radius: 0.75rem;
+            padding: 0.5rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            transition: all 0.3s ease-in-out;
+        }
+
+        /* IMPORTANT: New styles for the reply/edit text container to manage height */
+        .reply-text-container {
+            flex: 1;
+            max-height: 80px; /* Adjust as needed */
+            overflow-y: auto;
+            color: #4a5568;
+            font-size: 0.875rem;
+            font-style: italic;
+        }
+
+        /* New styles for the reply preview bubble */
+        .reply-preview {
+            background-color: #e2e8f0;
+            color: #4a5568;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .reply-preview:hover {
+            background-color: #d1d5db;
+        }
+
+        /* New styles for the Lottie animation overlay */
+        .lottie-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .lottie-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Pin icon styling for messages */
+        .pin-icon {
+            display: inline-block;
+            margin-right: 0.5rem;
+            color: #f97316; /* Orange color */
+        }
+        
+        /* Styling for the date separator in the chat window */
+        .date-separator {
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+
+        .date-separator span {
+            background-color: #e5e7eb;
+            color: #6b7280;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+        }
+
+        /* The message input area now relies on the flexbox parent to stay at the bottom, removing position: sticky */
+        .chat-input-area {
+            background-color: #fff;
+            padding: 1rem;
+            border-top: 1px solid #e5e7eb;
+            z-index: 10;
+        }
+
+        /* Styles for the auto-resizing textarea */
+        #message-input {
+            resize: none; /* Prevent manual resizing by the user */
+            overflow-y: hidden; /* Hide scrollbar until max-height is reached */
+            max-height: 120px; /* Approximately 6 lines of text */
+            line-height: 20px; /* Adjust this to match your font size */
+        }
+        /* Styles for the disabled state of the input area */
+        #message-input-disabled {
+            background-color: #f3f4f6;
+        color: #6b7280;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* Styles for the selected media container */
+        #selected-media-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 12px;
+        }
+
+        .media-preview {
+            display: flex;
+            align-items: center;
+            background-color: #f1f5f9;
+            border-radius: 12px;
+            padding: 6px 10px;
+            font-size: 14px;
+            color: #4a5568;
+            position: relative;
+        }
+
+        .media-preview .close-button {
+            background-color: rgba(0,0,0,0.2);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+        .media-preview img {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin-right: 8px;
+        }
+
+        /* Styles for sent media in the chat bubble */
+        .sent-file-card {
+            background-color: #cbd5e1; /* Gray for documents */
+            color: #1f2937;
+            padding: 8px 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            text-decoration: none; /* Remove underline from link */
+        }
+        .sent-file-card:hover {
+            opacity: 0.8;
+        }
+
+        .sent-file-card .icon {
+            font-size: 20px;
+        }
+
+        /* UPDATED: Instagram-style image sizing */
+        .sent-image {
+            max-width: 250px;
+            max-height: 250px;
+            width: auto;
+            height: auto;
+            object-fit: contain; /* Prevents cropping and fits the entire image */
+            border-radius: 12px;
+            cursor: pointer; /* Indicate that the image is clickable */
+        }
+
+        .sent-image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .sent-image-grid img {
+            max-width: 100%;
+            max-height: 150px; /* Constrain grid image height */
+            border-radius: 12px;
+            object-fit: cover;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .sent-media-container {
+            margin-bottom: 12px;
+        }
+
+        /* NEW: Styles for the image viewer modal */
+        #image-modal {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+        }
+        
+        .image-modal-content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            max-width: 90%;
+            max-height: 90%;
+            gap: 1rem;
+        }
+
+        #modal-image {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 1rem;
+        }
+
+        .image-modal-actions {
+            display: flex;
+            gap: 1rem;
+            z-index: 160;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+        }
+
+        .image-modal-actions .close-button,
+        .image-modal-actions .download-button {
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            border-radius: 9999px;
+            padding: 0.5rem 1rem;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .image-modal-actions .close-button:hover,
+        .image-modal-actions .download-button:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .image-modal-actions .download-button {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .image-modal-actions .download-button:hover {
+            background-color: #2563eb;
+        }
+        
+        /* UPDATED: Styles for the reply bubble within a message to allow multiline and fit better */
+        .reply-message-bubble {
+            background-color: #f1f5f9; /* Soft light gray color */
+            color: #4a5568;
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.75rem;
+            border-left: 3px solid #3b82f6; /* A blue border to indicate a reply */
+            margin-bottom: 0.5rem;
+            max-width: 80%; /* Ensure it doesn't take up the full width */
+            /* Removed fixed height and overflow to allow it to expand with content */
+            cursor: pointer; /* Add a pointer to indicate it's clickable */
+            transition: transform 0.2s ease-in-out;
+        }
+        /* Add a subtle hover effect */
+        .reply-message-bubble:hover {
+            transform: scale(1.02);
+        }
+
+        .reply-message-bubble .reply-sender {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1f2937;
+            margin-bottom: 0.25rem;
+            display: block;
+        }
+
+        .reply-message-bubble .reply-text {
+            color: #6b7280;
+        }
+    </style>
+</head>
+<script>
+    // Authentication check - runs when page loads
+    const API_BASE = "/api";
+    
+    async function checkAuthentication() {
+        const token = localStorage.getItem("token");
+        console.log("Checking authentication, token exists:", !!token);
+        
+        if (!token) {
+            console.log("No token found, redirecting to login");
+            window.location.href = "/login.html";
+            return false;
+        }
+        
+        try {
+            console.log("Making auth check request...");
+            const response = await fetch(`${API_BASE}/check-status`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token })
+            });
+            
+            const data = await response.json();
+            console.log("Auth check response:", data);
+            
+            if (!data.authenticated) {
+                console.log("User not authenticated, clearing storage and redirecting");
+                localStorage.removeItem("token");
+                localStorage.removeItem("email");
+                localStorage.removeItem('userRole');
+                window.location.href = "/login.html";
+                return false;
+            } else {
+                console.log("User authenticated successfully");
+                // Store user data for use in the page
+                localStorage.setItem("currentUser", JSON.stringify(data.user));
+                return true;
+            }
+        } catch (error) {
+            console.error("Auth check failed:", error);
+            window.location.href = "/login.html";
+            return false;
+        }
+    }
+    
+    // Run authentication check when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        checkAuthentication();
+    });
+    
+    // Also run immediately in case DOM is already loaded
+    if (document.readyState === 'loading') {
+        // DOM is still loading
+    } else {
+        // DOM is already loaded
+        checkAuthentication();
+    }
+</script>
+<!-- UPDATED: The body is now a flex container that holds the header, main content, and footer.
+This ensures the main content area grows to push the footer to the bottom. -->
+<body class="flex flex-col min-h-screen">
+
+    <!-- Header -->
+<header class="bg-white sticky top-0 z-50 shadow-sm">
+  <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+    <!-- Logo -->
+    <a href="index.html" class="flex items-center space-x-2">
+      <span class="font-bold text-lg text-[#283E4A]">NextLens AI</span>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex items-center space-x-6">
+      <a href="my-network.html" class="text-gray-600 hover:text-blue-500">My Network</a>
+      <a href="my-notifications.html" class="text-gray-600 hover:text-blue-500">My Notifications</a>
+      <a href="job-opportunities.html" class="text-gray-600 hover:text-blue-500">Job Opportunities</a>
+      <a href="privacy.html" class="text-gray-600 hover:text-blue-500">Privacy & Policy</a>
+      <a href="contact.html" class="text-gray-600 hover:text-blue-500">Contact</a>
+      <button id="sign-up-btn-desktop"
+        class="px-5 py-2 rounded-full font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-md">
+        Sign Up
+      </button>
+    </nav>
+
+    <!-- Mobile Hamburger Button -->
+    <button id="open-hamburger-menu-btn" class="md:hidden">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 6h16M4 12h16m-7 6h7" />
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile Hamburger Menu -->
+<div id="hamburger-menu-links"
+  class="hamburger-menu-links closed fixed top-0 right-0 h-full w-2/3 max-w-sm bg-white/80 backdrop-blur-md shadow-lg z-40 p-6 pt-20 overflow-y-auto md:hidden">
+  <button id="close-hamburger-menu-btn"
+    class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+      viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+  <nav class="flex flex-col space-y-4 text-lg text-gray-800">
+    <a href="my-network.html" class="hover:text-gray-600">My Network</a>
+    <a href="my-notifications.html" class="hover:text-gray-600">My Notifications</a>
+    <a href="job-opportunities.html" class="hover:text-gray-600">Job Opportunities</a>
+    <a href="privacy.html" class="hover:text-gray-600">Privacy & Policy</a>
+    <a href="contact.html" class="hover:text-gray-600">Contact</a>
+    <hr class="border-gray-300 my-4">
+    <a id="auth-link" href="#" class="text-red-600 hover:text-red-500 text-left">Sign Out</a>
+  </nav>
+</div>
+    <!-- The main content area. `flex-grow` makes this container fill the available space
+    between the header and the footer. -->
+    <main class="flex-grow flex justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-7xl flex">
+            
+            <!-- Chat List - Visible on all screen sizes, but acts differently -->
+            <!-- ADDED: hidden on mobile by default to be controlled by JS -->
+            <!-- CHANGED: lg:flex for desktop visibility -->
+            <div id="chat-list-container" class="w-full lg:w-1/3 flex-shrink-0 flex flex-col relative transition-transform duration-300 ease-in-out transform lg:translate-x-0">
+                <!-- Header for chat filters -->
+                <div class="p-4 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <button id="profile-icon-button" class="flex items-center space-x-2 hover:bg-gray-100 p-2 rounded-full transition-colors">
+                            <img id="user-profile-pic" src="https://placehold.co/40x40/e2e8f0/000000?text=P" alt="Profile" class="w-10 h-10 rounded-full object-cover border-2 border-blue-600" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                        </button>
+                        <h2 class="text-2xl font-bold text-gray-800 text-left">My Network</h2>
+                    </div>
+                
+                    <!-- Custom Toggle Switch -->
+                    <div id="chat-toggle" class="relative w-full h-10 bg-gray-200 rounded-full cursor-pointer p-1 transition-colors duration-200 hover:bg-gray-300">
+                        <!-- Toggle slider -->
+                        <div id="toggle-slider" class="absolute h-8 w-1/2 bg-blue-600 rounded-full shadow-md transition-all duration-300 ease-in-out left-1"></div>
+                        <!-- Toggle labels -->
+                        <div class="relative z-10 flex h-full">
+                            <span id="connected-label" class="flex-1 flex items-center justify-center font-medium text-white transition-colors duration-200">My Connections</span>
+                            <span id="requests-label" class="flex-1 flex items-center justify-center font-medium text-gray-700 transition-colors duration-200">Requests</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- List of Chats -->
+                <ul id="chat-list" class="flex-grow overflow-y-auto divide-y divide-gray-100">
+                    <!-- Chat items will be injected here by JavaScript -->
+                </ul>
+            </div>
+            
+            <!-- Chat Window - Hidden on small screens initially -->
+            <div id="chat-window-container" class="absolute inset-0 lg:static lg:w-2/3 lg:flex-shrink-0 bg-white flex flex-col z-10 transition-transform duration-300 ease-in-out transform translate-x-full lg:translate-x-0 hidden">
+                
+                <!-- Dynamic Chat Window Header with back button, profile pic, name, and actions -->
+                <div id="chat-window-header" class="bg-white p-4 border-b border-gray-200 flex items-center justify-between space-x-3 flex-shrink-0 shadow-sm">
+                    <!-- Left side: Back button, profile pic, and name -->
+                    <div class="flex items-center space-x-3">
+                        <button id="back-button" class="lg:hidden text-gray-500 hover:text-gray-700 transition-colors duration-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                            </svg>
+                        </button>
+                        <button id="profile-link" class="flex items-center space-x-3 focus:outline-none">
+                            <img id="chat-profile-pic" src="https://placehold.co/40x40/e2e8f0/000000?text=P" alt="Profile" class="w-10 h-10 rounded-full object-cover">
+                            <span id="chat-user-name" class="font-semibold text-lg text-gray-800">Select a chat</span>
+                        </button>
+                    </div>
+                    <!-- Right side: More options -->
+                    <div id="chat-action-buttons" class="relative flex items-center space-x-2">
+                        <button id="chat-options-button" class="p-2 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200">
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </button>
+                        
+                        <!-- Corrected Chat Options Dropdown Menu -->
+                        <div id="chat-options-menu" class="absolute right-0 top-full mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="chat-options-button">
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 chat-option" role="menuitem" id="chat-report-option">Report Chat</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 chat-option" role="menuitem" id="chat-delete-option">Delete Chat</a>
+                                <a href="#" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-100 chat-option danger" role="menuitem" id="chat-block-option">Block User</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Messages Area.
+                `flex-1` makes this container grow and fill the available space, while `overflow-y-auto` adds scrolling.
+                -->
+                <div id="chat-messages-container" class="chat-messages-container flex-1 overflow-y-auto p-4">
+                    <!-- Messages will be injected here by JavaScript -->
+                </div>
+
+                <!-- Message Input Area -->
+                <div id="chat-input-area" class="flex-shrink-0 bg-white p-4 border-t border-gray-200">
+                    <!-- The reply bar is now inside this container to keep it in the correct layout flow -->
+                    <div id="reply-bar" class="hidden reply-bar-container mb-2">
+                        <!-- Reply bar content will be dynamically generated here -->
+                    </div>
+                    
+                    <!-- NEW: Edit bar for when a user is editing a message -->
+                    <div id="edit-bar" class="hidden edit-bar-container mb-2">
+                        <div class="flex-1 flex items-center overflow-hidden">
+                             <span class="text-sm font-semibold text-gray-700 mr-2">Editing:</span>
+                             <div id="edit-text-preview" class="reply-text-container"></div>
+                        </div>
+                        <button id="cancel-edit-button" class="text-gray-500 hover:text-gray-700 flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- New: Container for selected files and images -->
+                    <div id="selected-media-container">
+                        <!-- Media previews will be dynamically generated here -->
+                    </div>
+                    
+                    <div id="input-controls" class="flex items-center space-x-3">
+                        <!-- File and Gallery buttons -->
+                        <div class="flex space-x-2">
+                            <!-- File Button -->
+                            <label for="file-input" class="bg-gray-200 text-gray-600 p-3 rounded-full shadow-sm hover:bg-gray-300 cursor-pointer transition-all duration-200">
+                                <i class="fas fa-paperclip"></i>
+                            </label>
+                            <input type="file" id="file-input" class="hidden" multiple>
+
+                            <!-- Gallery Button -->
+                            <label for="image-input" class="bg-gray-200 text-gray-600 p-3 rounded-full shadow-sm hover:bg-gray-300 cursor-pointer transition-all duration-200">
+                                <i class="fas fa-image"></i>
+                            </label>
+                            <input type="file" id="image-input" class="hidden" accept="image/*" multiple>
+                        </div>
+                        <!-- UPDATED: Changed the corner radius from 'rounded-full' to 'rounded-xl' for a less curved look -->
+                        <textarea id="message-input" rows="1" placeholder="Type a message..." class="flex-1 p-3 rounded-xl bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"></textarea>
+                        <button id="send-button" class="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200">
+                            <!-- Send SVG -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- New: Blocked User Message Overlay -->
+                    <div id="blocked-message-overlay" class="hidden absolute inset-x-0 bottom-0 top-0 bg-gray-50 flex items-center justify-center p-4">
+                        <p class="text-red-500 font-semibold">You have blocked this user.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content max-w-md mx-4">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">Your Profile</h2>
+            
+            <!-- Profile Picture Section -->
+            <div class="text-center mb-6">
+                <div id="profile-pic-container" class="relative inline-block cursor-pointer group" onclick="document.getElementById('profile-pic-input').click()">
+                    <img id="profile-pic-preview" 
+                         src="https://placehold.co/120x120/e2e8f0/000000?text=P" 
+                         alt="Profile Picture" 
+                         class="w-30 h-30 rounded-full object-cover border-4 border-blue-600 group-hover:opacity-80 transition-opacity cursor-pointer"
+                         style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;">
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-40 rounded-full cursor-pointer">
+                        <i class="fas fa-camera text-white text-xl"></i>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">Click to upload your picture</p>
+                <input type="file" id="profile-pic-input" accept="image/*" class="hidden" onchange="handleImageSelection(event)">
+            </div>
+            
+            <!-- Name Input Section -->
+            <div class="mb-6">
+                <label for="profile-name-input" class="block text-sm font-medium text-gray-700 mb-2">Your Name</label>
+                <input type="text" 
+                       id="profile-name-input" 
+                       placeholder="Enter your full name" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+            </div>
+            
+            <!-- Save Button -->
+            <button id="save-profile-button" 
+                    class="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                Save Profile
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal for showing alerts -->
+    <div id="alert-modal" class="modal">
+        <div class="modal-content bg-white p-6 rounded-2xl shadow-xl max-w-sm w-full">
+            <p id="alert-message" class="text-lg text-gray-800 mb-6"></p>
+            <button id="alert-close-button" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-full hover:bg-blue-700 transition-all duration-200">OK</button>
+        </div>
+    </div>
+    
+    <!-- NEW: Modal for viewing full-size images -->
+    <div id="image-modal">
+        <div class="image-modal-content">
+            <div class="image-modal-actions">
+                <a id="download-image-button" class="download-button" href="#" download>
+                    <i class="fas fa-download"></i>
+                    <span>Download</span>
+                </a>
+                <button id="close-image-modal-button" class="close-button">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <img id="modal-image" src="" alt="Full-size Image">
+        </div>
+    </div>
+
+    <!-- Modal for reporting a message -->
+    <div id="report-modal" class="modal">
+        <div class="modal-content bg-white p-6 rounded-2xl shadow-xl max-w-md w-full">
+            <h3 class="text-xl font-bold mb-4">Report Message/Chat</h3>
+            <p class="text-gray-600 mb-6">Are you sure you want to report this? Please select a reason.</p>
+            <form id="report-form" class="space-y-4">
+                <div class="flex items-center">
+                    <input type="radio" id="spam"
+  name="report-reason" value="Spam" class="form-radio h-4 w-4 text-blue-600" required>
+                    <label for="spam" class="ml-2 text-gray-700">Spam</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="radio" id="harassment" name="report-reason" value="Harassment" class="form-radio h-4 w-4 text-blue-600">
+                    <label for="harassment" class="ml-2 text-gray-700">Harassment</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="radio" id="hate-speech" name="report-reason" value="Hate Speech" class="form-radio h-4 w-4 text-blue-600">
+                    <label for="hate-speech" class="ml-2 text-gray-700">Hate Speech</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="radio" id="other" name="report-reason" value="Other" class="form-radio h-4 w-4 text-blue-600">
+                    <label for="other" class="ml-2 text-gray-700">Other</label>
+                </div>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" id="cancel-report-button" class="bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-full hover:bg-gray-300 transition-all duration-200">Cancel</button>
+                    <button type="submit" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-full hover:bg-red-700 transition-all duration-200">Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Lottie animation overlay for loading states -->
+    <div id="lottie-overlay" class="lottie-overlay">
+        <!-- Lottie Player will be injected here -->
+    </div>
+    
+    <!-- Message Options Modal -->
+    <div id="message-options-modal" class="message-options-modal shadow-lg">
+        <div class="message-option" id="reply-option">Reply</div>
+        <div class="message-option" id="copy-option">Copy</div>
+        <div class="message-option" id="pin-option">Pin</div>
+        <div class="message-option hidden" id="edit-option">Edit</div>
+        <div class="message-option danger" id="delete-for-you-option">Delete for you</div>
+        <div class="message-option hidden danger" id="unsend-option">Unsend</div>
+        <div class="message-option" id="report-message-option">Report</div>
+    </div>
+    
+    <!-- Toast Notification Container -->
+    <div id="toast-container"></div>
+    
+    <!-- New Footer Section - Fixed to bottom -->
+    <footer class="bg-slate-800 text-white py-8 px-4 sm:px-6 lg:px-8 flex-shrink-0 mt-auto border-t border-gray-700 relative z-10">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center md:items-start space-y-8 md:space-y-0">
+            <!-- Left section: NextLens AI details -->
+            <div class="text-center md:text-left">
+                <h2 class="text-2xl font-bold mb-2">NextLens AI</h2>
+                <p class="text-gray-400 max-w-sm text-sm">
+                    The next generation of career building and recruitment, bringing clarity and focus so companies see talent clearly and talents find the right opportunities.
+                </p>
+            </div>
+            
+            <!-- Right section: Quick Links -->
+            <div class="text-center md:text-right">
+                <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+                <ul class="space-y-2">
+                    <li>
+                        <a href="privacy.html" class="text-gray-400 hover:text-white transition-colors duration-200">Privacy & Policy</a>
+                    </li>
+                    <li>
+                        <a href="contact.html" class="text-gray-400 hover:text-white transition-colors duration-200">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Copyright section -->
+        <div class="mt-8 pt-4 border-t border-gray-700 text-center text-sm text-gray-500">
+            &copy; 2025 NextLens AI. All rights reserved.
+        </div>
+    </footer>
+    
+    <!-- Placeholder for mobile menu button (will be hidden by CSS on desktop) -->
+    <div id="mobile-menu-button" style="display: none;"></div>
+    <div id="close-mobile-menu-button" style="display: none;"></div>
+    <div id="mobile-menu-backdrop" style="display: none;"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content bg-white p-6 rounded-2xl shadow-xl max-w-md w-full relative z-50">
+            <button id="close-profile-modal" class="absolute top-4 right-4 text-gray-600 hover:text-gray-800">
+              &times;
+            </button>
+            <h3 class="text-xl font-bold mb-4 text-center">My Profile</h3>
+            <div class="text-center mb-6">
+                <div class="relative inline-block cursor-pointer" id="profile-pic-container">
+                    <img id="profile-pic-preview" src="https://placehold.co/120x120/e2e8f0/6b7280?text=+" alt="Profile Picture" class="w-30 h-30 rounded-full object-cover mx-auto border-4 border-blue-600 hover:border-blue-700 transition-colors">
+                    <div class="absolute inset-0 rounded-full bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-200 flex items-center justify-center">
+                        <i class="fas fa-camera text-white opacity-0 hover:opacity-100 transition-opacity duration-200"></i>
+                    </div>
+                    <input type="file" id="profile-pic-input" class="hidden" accept="image/*">
+                </div>
+                <p class="text-sm text-gray-500 mt-2">Click to upload profile picture</p>
+            </div>
+            <div class="mb-6">
+                <label for="profile-name-input" class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                <input type="text" id="profile-name-input" placeholder="Enter your full name" class="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+            </div>
+            <div class="flex justify-center">
+                <button id="save-profile-button" class="bg-blue-600 text-white font-semibold py-3 px-8 rounded-full hover:bg-blue-700 transition-all duration-200">Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        // --- Authentication Check ---
+        function configureUIForRole(userRole) {
+            // Both Company and Talent users can access the page and create profiles
+            // UI will be configured based on role
+            const userProfilePic = document.getElementById('user-profile-pic');
+            
+            if (userRole === 'company') {
+                // Company users will see company profile management
+                loadCompanyProfile();
+            } else if (userRole === 'talent') {
+                // Talent users will see talent profile management  
+                loadTalentProfile();
+            }
+        }
+
+        function loadCompanyProfile() {
+            const savedCompanyName = localStorage.getItem('userProfileName');
+            const savedCompanyLogo = localStorage.getItem('userProfilePic');
+            
+            if (savedCompanyName && savedCompanyLogo) {
+                document.getElementById('user-profile-pic').src = savedCompanyLogo;
+            }
+        }
+
+        function loadTalentProfile() {
+            const savedTalentName = localStorage.getItem('userProfileName');
+            const savedTalentPic = localStorage.getItem('userProfilePic');
+            
+            if (savedTalentName && savedTalentPic) {
+                document.getElementById('user-profile-pic').src = savedTalentPic;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wait for our main auth check to complete, then configure UI
+            setTimeout(() => {
+                const currentUser = localStorage.getItem('currentUser');
+                if (currentUser) {
+                    try {
+                        const userData = JSON.parse(currentUser);
+                        // Configure UI based on user role
+                        configureUIForRole(userData.role);
+                        
+                        // Load profile data
+                        loadUserProfile();
+                        
+                        // Check for automatic chat opening from notifications
+                        checkAutoOpenChat();
+                    } catch (error) {
+                        console.error('Error parsing user data:', error);
+                    }
+                }
+            }, 100);
+        });
+
+        function checkAutoOpenChat() {
+            const autoOpenData = localStorage.getItem('autoOpenChat');
+            if (autoOpenData) {
+                try {
+                    const chatData = JSON.parse(autoOpenData);
+                    // Remove the flag so it doesn't auto-open again
+                    localStorage.removeItem('autoOpenChat');
+                    
+                    // Auto-open chat with the specified user
+                    openChatWithUser(chatData.name, chatData.pic, chatData.id);
+                } catch (error) {
+                    console.error('Error parsing auto-open chat data:', error);
+                    localStorage.removeItem('autoOpenChat');
+                }
+            }
+        }
+
+        function openChatWithUser(userName, userPic, userId) {
+            // Create or find the connection in the chat list
+            const existingConnection = chatsData.connections.find(conn => conn.name === userName);
+            
+            if (!existingConnection) {
+                // Add new connection to the chat list
+                const newConnection = {
+                    id: userId || Date.now(),
+                    name: userName,
+                    profilePic: userPic,
+                    lastMessage: 'Connected via notification',
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    unread: 0,
+                    messages: []
+                };
+                
+                chatsData.connections.unshift(newConnection);
+                renderChatList(chatsData.connections);
+            }
+            
+            // Open the chat window automatically
+            selectChat(userName, userPic);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- DOM Elements ---
+            const chatListContainer = document.getElementById('chat-list-container');
+            const chatToggle = document.getElementById('chat-toggle');
+            const toggleSlider = document.getElementById('toggle-slider');
+            const connectedLabel = document.getElementById('connected-label');
+            const requestsLabel = document.getElementById('requests-label');
+            const chatList = document.getElementById('chat-list');
+            const chatWindowContainer = document.getElementById('chat-window-container');
+            const backButton = document.getElementById('back-button');
+            const chatUserName = document.getElementById('chat-user-name');
+            const chatProfilePic = document.getElementById('chat-profile-pic');
+            const chatOptionsButton = document.getElementById('chat-options-button');
+            const chatOptionsMenu = document.getElementById('chat-options-menu');
+            const chatReportOption = document.getElementById('chat-report-option');
+            const chatDeleteOption = document.getElementById('chat-delete-option');
+            const chatBlockOption = document.getElementById('chat-block-option');
+            const chatMessagesContainer = document.getElementById('chat-messages-container');
+            const sendButton = document.getElementById('send-button');
+            const messageInput = document.getElementById('message-input');
+            const fileInput = document.getElementById('file-input');
+            const imageInput = document.getElementById('image-input');
+            const selectedMediaContainer = document.getElementById('selected-media-container');
+            const messageOptionsModal = document.getElementById('message-options-modal');
+            const replyOption = document.getElementById('reply-option');
+            const copyOption = document.getElementById('copy-option');
+            const pinOption = document.getElementById('pin-option');
+            const editOption = document.getElementById('edit-option');
+            const deleteForYouOption = document.getElementById('delete-for-you-option');
+            const unsendOption = document.getElementById('unsend-option');
+            const reportMessageOption = document.getElementById('report-message-option');
+            const replyBar = document.getElementById('reply-bar');
+            const editBar = document.getElementById('edit-bar');
+            const cancelEditButton = document.getElementById('cancel-edit-button');
+            const reportModal = document.getElementById('report-modal');
+            const cancelReportButton = document.getElementById('cancel-report-button');
+            const reportForm = document.getElementById('report-form');
+            const alertModal = document.getElementById('alert-modal');
+            const alertMessage = document.getElementById('alert-message');
+            const alertCloseButton = document.getElementById('alert-close-button');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const closeMobileMenuButton = document.getElementById('close-mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuBackdrop = document.getElementById('mobile-menu-backdrop');
+            const signOutButton = document.getElementById('sign-out-button');
+            const mobileSignOutButton = document.getElementById('mobile-sign-out-button');
+            const cancelPlanButton = document.getElementById('cancel-plan-button');
+            const mobileCancelPlanButton = document.getElementById('mobile-cancel-plan-button');
+            const inputControls = document.getElementById('input-controls');
+            const blockedMessageOverlay = document.getElementById('blocked-message-overlay');
+            const editTextPreview = document.getElementById('edit-text-preview');
+            
+            // NEW DOM elements for the image modal
+            const imageModal = document.getElementById('image-modal');
+            const modalImage = document.getElementById('modal-image');
+            const downloadImageButton = document.getElementById('download-image-button');
+            const closeImageModalButton = document.getElementById('close-image-modal-button');
+            
+            // Profile modal DOM elements
+            const profileIconButton = document.getElementById('profile-icon-button');
+            const profileModal = document.getElementById('profile-modal');
+            const profilePicContainer = document.getElementById('profile-pic-container');
+            const profilePicInput = document.getElementById('profile-pic-input');
+            const profilePicPreview = document.getElementById('profile-pic-preview');
+            const profileNameInput = document.getElementById('profile-name-input');
+            const saveProfileButton = document.getElementById('save-profile-button');
+
+            // --- Application State ---
+            let currentView = 'connected'; // 'connected' or 'requests'
+            let activeChatId = null;
+            let activeMessageElement = null; // To store the message element for context menu
+            let replyingToMessage = null; // Stores the message object being replied to
+            let editingMessageId = null; // Stores the ID of the message being edited
+            let selectedFiles = []; // Array to store selected files/images
+            let lottieAnimation = null; // Reference to the Lottie animation instance
+            let longPressTimer = null; // Timer for the long-press event
+            const LONG_PRESS_DURATION = 500; // milliseconds
+            const isPaidUser = true; // Placeholder for user plan status
+
+            // New: In-memory data for messages
+            const allMessages = {};
+            
+            // --- Real Data Structure for managing chats from backend ---
+            const chatsData = {
+                connections: [],
+                requests: []
+            };
+
+            // Load real chat data from backend
+            async function loadChatData() {
+ const token = localStorage.getItem("token");
+                if (!token) return;
+
+                try {
+                    const response = await fetch('/api/chat-connections', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        chatsData.connections = data.connections || [];
+                        chatsData.requests = data.requests || [];
+                        renderChatList(chatsData.connections);
+                        console.log('Loaded real chat data:', data);
+                    } else {
+                        console.log('No chat data available or user not authenticated');
+                        chatsData.connections = [];
+                        chatsData.requests = [];
+                    }
+                } catch (error) {
+                    console.error('Error loading chat data:', error);
+                    chatsData.connections = [];
+                    chatsData.requests = [];
+                }
+            }
+            
+            // Load real messages from backend for a specific chat
+            async function loadMessages(chatId) {
+ const token = localStorage.getItem("token");
+                if (!token || !chatId) return [];
+
+                try {
+ const response = await fetch(`${API_BASE}/chat/get-messages/${chatId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        const messages = await response.json();
+                        allMessages[chatId] = messages;
+                        return messages;
+                    } else {
+                        console.log(`No messages found for chat ${chatId}`);
+                        allMessages[chatId] = [];
+                        return [];
+                    }
+                } catch (error) {
+                    console.error('Error loading messages:', error);
+                    allMessages[chatId] = [];
+                    return [];
+                }
+            }
+
+            // Basic selectChat function to handle mobile view and message loading
+            function selectChat(chatName, chatPic, chatId) {
+                 activeChatId = chatId;
+                 chatUserName.textContent = chatName;
+                 chatProfilePic.src = chatPic || `https://placehold.co/40x40/e2e8f0/000000?text=${chatName.charAt(0)}`;
+                if (window.innerWidth < 1024) {
+                     chatWindowContainer.classList.remove('hidden', 'translate-x-full');
+                     chatListContainer.classList.add('hidden');
+                 }
+                 renderMessages(activeChatId); // Render messages for the selected chat
+            }
+            // Lottie animation data
+            const lottieLoaderData = {
+                container: document.getElementById('lottie-overlay'),
+                renderer: 'svg',
+                loop: true,
+                autoplay: true,
+                path: 'https://assets5.lottiefiles.com/packages/lf20_t9g2b3yP.json' // Example loading animation
+            };
+            // Helper function to show modals
+            function showModal(message) {
+                alertMessage.textContent = message;
+                alertModal.style.display = 'flex';
+            }
+
+            function hideModal() {
+                alertModal.style.display = 'none';
+            }
+
+            // Helper function for showing toasts
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.textContent = message;
+                toast.className = 'toast';
+                document.getElementById('toast-container').appendChild(toast);
+                setTimeout(() => toast.classList.add('show'), 10);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 500);
+                }, 3000);
+            }
+
+            // Helper function to show a loading overlay
+            function showLoadingOverlay() {
+                const lottieOverlay = document.getElementById('lottie-overlay');
+                lottieOverlay.classList.add('visible');
+                if (!lottieAnimation) {
+                    lottieAnimation = lottie.loadAnimation(lottieLoaderData);
+                }
+            }
+
+            // Helper function to hide the loading overlay
+            function hideLoadingOverlay() {
+                const lottieOverlay = document.getElementById('lottie-overlay');
+                lottieOverlay.classList.remove('visible');
+            }
+
+            // Helper function to format time
+            function formatTime(date) {
+                const options = { hour: '2-digit', minute: '2-digit' };
+                return new Date(date).toLocaleTimeString('en-US', options);
+            }
+            
+            // NEW: Helper function to scroll to a specific message by ID
+            function scrollToMessage(messageId) {
+                const targetMessage = document.querySelector(`.message-container[data-message-id="${messageId}"]`);
+                if (targetMessage) {
+                    targetMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            // --- Chat Toggle Logic ---
+            if (chatToggle) {
+                chatToggle.addEventListener('click', () => {
+                if (currentView === 'connected') {
+                    // Switch to Requests
+                    toggleSlider.style.transform = 'translateX(100%)';
+                    connectedLabel.classList.remove('text-white');
+                    requestsLabel.classList.add('text-white');
+                    connectedLabel.classList.add('text-gray-700');
+                    requestsLabel.classList.remove('text-gray-700');
+                    currentView = 'requests';
+                    renderChatList(chatsData.requests);
+                } else {
+                    // Switch to Connections
+                    toggleSlider.style.transform = 'translateX(0)';
+                    connectedLabel.classList.add('text-white');
+                    requestsLabel.classList.remove('text-white');
+                    connectedLabel.classList.remove('text-gray-700');
+                    requestsLabel.classList.add('text-gray-700');
+                    currentView = 'connected';
+                    renderChatList(chatsData.connections);
+                }
+                });
+            }
+
+            // --- Chat List Rendering (Modified to use the new data structure) ---
+            function renderChatList(chats) {
+                chatList.innerHTML = '';
+                chats.forEach(chat => {
+                    const li = document.createElement('li');
+                    li.className = `p-4 cursor-pointer hover:bg-gray-100 transition-colors duration-200 flex items-center space-x-4 ${activeChatId === chat.id ? 'bg-gray-100' : ''}`;
+                    li.dataset.chatId = chat.id;
+                    li.innerHTML = `
+                        <img src="https://placehold.co/40x40/e2e8f0/000000?text=${chat.name.charAt(0)}" alt="Profile" class="w-12 h-12 rounded-full object-cover">
+                        <div class="flex-1 overflow-hidden">
+                            <div class="flex justify-between items-center">
+                                <span class="font-semibold text-gray-800 text-lg truncate">${chat.name}</span>
+                                <span class="text-xs text-gray-500">${chat.lastMessage ? formatTime(chat.time) : ''}</span>
+                            </div>
+                            <p class="text-gray-600 text-sm truncate">${chat.lastMessage}</p>
+                        </div>
+                    `;
+                    chatList.appendChild(li);
+                });
+                        }
+        // --- New: Message Rendering Function ---
+            function renderMessages(chatId) {
+                chatMessagesContainer.innerHTML = '';
+                const messages = allMessages[chatId] || [];
+                const otherUser = [...chatsData.connections, ...chatsData.requests].find(c => c.id === chatId);
+                
+                if (messages.length === 0) {
+                    const emptyMessage = document.createElement('div');
+                    emptyMessage.className = 'flex flex-col items-center justify-center h-full text-gray-500 text-center';
+                    emptyMessage.innerHTML = `
+                        <i class="fas fa-comment-alt text-4xl mb-4"></i>
+                        <p>No messages yet. Start a conversation!</p>
+                    `;
+                    chatMessagesContainer.appendChild(emptyMessage);
+                    return;
+                }
+
+                messages.forEach(message => {
+                    const messageElement = document.createElement('div');
+                    const isMyMessage = message.sender === 'my';
+                    messageElement.className = `flex mb-4 message-container ${isMyMessage ? 'justify-end my-message-container' : 'justify-start other-message-container'}`;
+                    messageElement.dataset.messageId = message.id;
+
+                    let avatarHTML = '';
+                    if (!isMyMessage && otherUser) {
+                        avatarHTML = `<img src="https://placehold.co/40x40/e2e8f0/000000?text=${otherUser.name.charAt(0)}" alt="Profile" class="w-10 h-10 rounded-full object-cover mr-2">`;
+                    }
+
+                    const messageBubbleClass = isMyMessage ? 'bg-blue-600 text-white rounded-br-none' : 'bg-gray-300 text-gray-800 rounded-bl-none';
+                    const timeAlignClass = isMyMessage ? 'right-0' : 'left-0';
+                    
+                    // UPDATED: Added a specific class 'edited-tag' for the span
+                    const editedTag = message.isEdited ? '<span class="text-xs text-gray-400 italic ml-2 edited-tag">(Edited)</span>' : '';
+
+
+                    let contentHTML = '';
+                    if (message.replyTo) {
+                        const repliedToSender = message.replyTo.sender === 'my' ? 'You' : (otherUser ? otherUser.name : 'User');
+                        contentHTML += `
+                            <!-- NEW: Added data-reply-to-id for the scroll function -->
+                            <div class="reply-message-bubble" data-reply-to-id="${message.replyTo.messageId}">
+                                <span class="reply-sender">${repliedToSender}</span>
+                                <p class="reply-text">${message.replyTo.text || 'File Message'}</p>
+                            </div>
+                        `;
+                    }
+                    if (message.text) {
+                        contentHTML += `<p class="message-text">${message.text}${editedTag}</p>`;
+                    }
+                    if (message.files && message.files.length > 0) {
+                        contentHTML += `<div class="sent-media-container">`;
+                        if (message.files.length > 1 && message.files.every(file => file.type.startsWith('image/'))) {
+                            contentHTML += `<div class="sent-image-grid">`;
+                            message.files.forEach(file => {
+                                contentHTML += `<img src="${file.url}" alt="${file.name}">`;
+                            });
+                            contentHTML += `</div>`;
+                        } else {
+                            message.files.forEach(file => {
+                                if (file.type.startsWith('image/')) {
+                                    contentHTML += `<img src="${file.url}" alt="${file.name}" class="sent-image">`;
+                                } else {
+                                    // UPDATED: Added the `download` attribute to automatically download the file
+                                    contentHTML += `<a href="${file.url}" class="sent-file-card" download="${file.name}" target="_blank">
+                                        <i class="fas fa-file-alt icon"></i>
+                                        <span>${file.name}</span>
+                                    </a>`;
+                                }
+                            });
+                        }
+                        contentHTML += `</div>`;
+                    }
+
+
+                    messageElement.innerHTML = `
+                        ${avatarHTML}
+                        <div class="relative max-w-sm">
+                            <div class="py-2 px-4 rounded-3xl shadow-md ${messageBubbleClass}">
+                                ${contentHTML}
+                            </div>
+                            <span class="absolute ${timeAlignClass} top-full text-xs text-gray-500 mt-1">${formatTime(message.time)}</span>
+                        </div>
+                    `;
+                    chatMessagesContainer.appendChild(messageElement);
+                });
+
+                // Scroll to the bottom of the chat messages
+                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+            }
+
+            // --- Chat Window Logic ---
+            if (chatList) {
+                chatList.addEventListener('click', (e) => {
+                const chatItem = e.target.closest('li');
+                if (chatItem) {
+                    const chatId = chatItem.dataset.chatId;
+                    activeChatId = chatId;
+                    // Find the correct chat object in our data structure
+                    const allChats = [...chatsData.connections, ...chatsData.requests];
+                    const selectedChat = allChats.find(chat => chat.id === chatId);
+
+                    if (selectedChat) {
+                        chatUserName.textContent = selectedChat.name;
+                        chatProfilePic.src = `https://placehold.co/40x40/e2e8f0/000000?text=${selectedChat.name.charAt(0)}`;
+                        selectChat(selectedChat.name, selectedChat.profilePic, chatId);
+                    }
+                }
+                });
+            }
+
+            if (backButton) {
+                backButton.addEventListener('click', () => {
+                chatWindowContainer.classList.add('translate-x-full');
+                // Use a timeout to hide the element after the transition
+                setTimeout(() => {
+                    chatWindowContainer.classList.add('hidden');
+                    chatListContainer.classList.remove('hidden'); // Show the chat list again
+                }, 300); // Must match the transition duration
+                });
+            }
+
+            // --- Message Sending Logic (Modified to handle editing and media) ---
+            if (sendButton) {
+                sendButton.addEventListener('click', sendMessage);
+            }
+            if (messageInput) {
+                messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); // Prevent new line on Enter
+                    sendMessage();
+                }
+                });
+            }
+
+            async function sendMessage() {
+                const messageText = messageInput.value.trim();
+                // Don't send if there's no text and no files selected or if the user is blocked
+                if ((!messageText && selectedFiles.length === 0) || !activeChatId) {
+                    return;
+                }
+            
+                // Check if we are in "edit" mode
+                if (editingMessageId) {
+ showLoadingOverlay();
+                    const messages = allMessages[activeChatId];
+                    const messageToEdit = messages.find(m => m.id === editingMessageId);
+                    if (messageToEdit) {
+                        messageToEdit.text = messageText;
+                        messageToEdit.time = new Date(); // Update the timestamp
+                        messageToEdit.isEdited = true; // Mark the message as edited
+                        showToast('Message updated.');
+
+                        // Send edit action to backend
+                        try {
+                            const token = localStorage.getItem("token");
+                            await fetch(`${API_BASE}/chat/edit-message/${editingMessageId}`, {
+                                method: "PUT",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    "Authorization": `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ newText: messageText })
+                            });
+                            console.log(`Message ${editingMessageId} edited successfully on backend.`);
+                        } catch (error) {
+                            console.error("Error editing message on backend:", error);
+                            showToast('Failed to update message on server.');
+                            // Optionally revert the local change or show an error state
+                        } finally {
+                            hideLoadingOverlay();
+                        }
+                    }
+                    cancelEdit(); // Exit edit mode
+                } else {
+                    showLoadingOverlay();
+                    
+                    const formData = new FormData();
+                    formData.append('chatRoomId', activeChatId);
+                    formData.append('text', messageText);
+
+                    if (replyingToMessage) {
+                        formData.append('replyToMessageId', replyingToMessage.messageId);
+                    }
+
+                    selectedFiles.forEach((fileObj, index) => {
+                        formData.append(`files`, fileObj.file);
+                    });
+                    
+                    // Simulate backend response structure
+                    // This will be replaced by the actual backend call
+                    const simulatedMessageId = Date.now().toString(); // Generate a unique ID
+                    
+                    // This is a new message
+                    const allChats = [...chatsData.connections, ...chatsData.requests];
+                    const activeChat = allChats.find(chat => chat.id === activeChatId);
+                    const currentTime = new Date();
+                    const messageId = Date.now().toString();
+    
+                    const newMessage = {
+                        id: simulatedMessageId, // Use simulated ID for now
+                        sender: 'my',
+                        text: messageText,
+                        files: selectedFiles.length > 0 ? selectedFiles : undefined,
+                        replyTo: replyingToMessage,
+                        time: currentTime
+                    };
+                
+                    // Add the new message to our in-memory storage
+                    if (!allMessages[activeChatId]) {
+                        allMessages[activeChatId] = [];
+                    }
+                    allMessages[activeChatId].push(newMessage);
+    
+                    // Check if the chat is currently in the requests list
+                    if (activeChat) {
+                        activeChat.lastMessage = messageText || 'Sent a file';
+                        activeChat.time = currentTime;
+                        
+                        const requestIndex = chatsData.requests.findIndex(chat => chat.id === activeChatId);
+                        if (requestIndex !== -1) {
+                            // Move the chat from requests to connections
+                            const movedChat = chatsData.requests.splice(requestIndex, 1)[0];
+                            chatsData.connections.unshift(movedChat); // Add to the beginning of connections
+                            showToast(`${movedChat.name} is now in your connections.`);
+                        } else {
+                            // If it's already a connection, just move it to the top of the list
+                            const connectionIndex = chatsData.connections.findIndex(chat => chat.id === activeChatId);
+                            if (connectionIndex !== -1) {
+                                const movedChat = chatsData.connections.splice(connectionIndex, 1)[0];
+                                chatsData.connections.unshift(movedChat);
+                            }
+                        }
+                    }
+
+                    clearReply();
+                    
+                    // Clear selected files and their previews
+                    try {
+                        const token = localStorage.getItem("token");
+                        const response = await fetch(`${API_BASE}/chat/send-message`, {
+                            method: "POST",
+                            headers: {
+                                "Authorization": `Bearer ${token}`
+                                // Note: 'Content-Type': 'multipart/form-data' is not needed here when using FormData
+                            },
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Failed to send message: ${response.statusText}`);
+                        }
+                        // Optional: Handle backend response if it returns the message data
+                        const sentMessage = await response.json();
+                        // You might need to update the in-memory message with data from the backend (e.g., final file URLs)
+                        console.log("Message sent successfully:", sentMessage);
+                    } catch (error) {
+                        console.error("Error sending message:", error);
+                    }
+                    selectedFiles = [];
+                    renderSelectedMedia();
+                }
+
+                messageInput.value = ''; // Clear the input
+                messageInput.style.height = 'auto'; // Reset textarea height after sending
+            
+                // Re-render the chat messages and the chat list
+                renderMessages(activeChatId);
+                renderChatList(currentView === 'connected' ? chatsData.connections : chatsData.requests);
+            }
+
+            // --- File and Image Selection and Preview Logic ---
+            
+            // Renders the selected files and images in the message input bar
+            function renderSelectedMedia() {
+                selectedMediaContainer.innerHTML = '';
+                if (selectedFiles.length > 0) {
+                    selectedFiles.forEach((file, index) => {
+                        const previewElement = document.createElement('div');
+                        previewElement.className = 'media-preview';
+                        previewElement.dataset.index = index;
+    
+                        if (file.type.startsWith('image/')) {
+                            previewElement.innerHTML = `
+                                <img src="${file.url}" alt="${file.name}">
+                                <span>${file.name}</span>
+                                <span class="close-button">x</span>
+                            `;
+                        } else {
+                            previewElement.innerHTML = `
+                                <i class="fas fa-file-alt file-icon"></i>
+                                <span>${file.name}</span>
+                                <span class="close-button">x</span>
+                            `;
+                        }
+                        selectedMediaContainer.appendChild(previewElement);
+                    });
+                }
+            }
+
+            // Handle file selection
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => {
+                    const files = Array.from(e.target.files);
+                    if (files.length > 0) {
+                        files.forEach(file => {
+                            selectedFiles.push({
+                                name: file.name,
+                                type: file.type,
+                                url: URL.createObjectURL(file), // Create a local URL for the document
+                                file: file
+                            });
+                        });
+                        renderSelectedMedia();
+                    }
+                    e.target.value = ''; // Clear the input
+                });
+            }
+
+            // Handle image selection
+            if (imageInput) {
+                imageInput.addEventListener('change', (e) => {
+                    const files = Array.from(e.target.files);
+                    if (files.length > 0) {
+                        files.forEach(file => {
+                            selectedFiles.push({
+                                name: file.name,
+                                type: file.type,
+                                url: URL.createObjectURL(file), // Create a local URL for preview
+                                file: file
+                            });
+                        });
+                        renderSelectedMedia();
+                    }
+                    e.target.value = ''; // Clear the input
+                });
+            }
+
+            // Handle removing a file/image from the preview
+            if (selectedMediaContainer) {
+                selectedMediaContainer.addEventListener('click', (e) => {
+                const closeButton = e.target.closest('.close-button');
+                if (closeButton) {
+                    const previewElement = closeButton.closest('.media-preview');
+                    const index = parseInt(previewElement.dataset.index);
+                    selectedFiles.splice(index, 1);
+                    renderSelectedMedia(); // Re-render the preview
+                }
+                });
+            }
+            
+            // --- NEW: Event listener for clicking the reply message bubble ---
+            if (chatMessagesContainer) {
+                chatMessagesContainer.addEventListener('click', (e) => {
+                const replyBubble = e.target.closest('.reply-message-bubble');
+                if (replyBubble) {
+                    const messageIdToScroll = replyBubble.dataset.replyToId;
+                    if (messageIdToScroll) {
+                        scrollToMessage(messageIdToScroll);
+                    }
+                }
+                });
+            }
+
+            // --- Message long-press and options modal logic ---
+            let pressTimer;
+            if (chatMessagesContainer) {
+                chatMessagesContainer.addEventListener('touchstart', (e) => {
+                const messageContainer = e.target.closest('.message-container');
+                if (messageContainer) {
+                    longPressTimer = setTimeout(() => {
+                        e.preventDefault(); // Prevent default touch behavior
+                        showOptionsForMessage(messageContainer, e);
+                    }, LONG_PRESS_DURATION);
+                }
+                });
+                chatMessagesContainer.addEventListener('touchend', () => {
+                    clearTimeout(longPressTimer);
+                });
+                chatMessagesContainer.addEventListener('mousedown', (e) => {
+                const messageContainer = e.target.closest('.message-container');
+                if (messageContainer) {
+                    longPressTimer = setTimeout(() => {
+                        e.preventDefault();
+                        showOptionsForMessage(messageContainer, e);
+                    }, LONG_PRESS_DURATION);
+                }
+                });
+            }
+
+            function showOptionsForMessage(messageElement, e) {
+                // Determine if the message is 'my' message or 'other' message
+                const isMyMessage = messageElement.classList.contains('my-message-container');
+                const isReceivedMessage = messageElement.classList.contains('other-message-container');
+                
+                // Hide or show options based on message type
+                editOption.classList.toggle('hidden', !isMyMessage);
+                unsendOption.classList.toggle('hidden', !isMyMessage);
+                deleteForYouOption.classList.toggle('hidden', !isMyMessage);
+                replyOption.classList.toggle('hidden', isMyMessage);
+                reportMessageOption.classList.toggle('hidden', isMyMessage);
+
+                // Check for pinned messages
+                const isPinned = messageElement.querySelector('.pin-icon');
+                pinOption.textContent = isPinned ? 'Unpin' : 'Pin';
+                
+                activeMessageElement = messageElement;
+                const modal = document.getElementById('message-options-modal');
+
+                // Position the modal near the message
+                const messageRect = messageElement.getBoundingClientRect();
+                const containerRect = chatMessagesContainer.getBoundingClientRect();
+                
+                let modalTop = e.touches ? e.touches[0].clientY : e.clientY;
+                let modalLeft = e.touches ? e.touches[0].clientX : e.clientX;
+
+                // Adjust position to stay within the chat window boundaries
+                modal.style.top = `${Math.min(modalTop, containerRect.bottom - modal.offsetHeight)}px`;
+                modal.style.left = `${Math.min(modalLeft, containerRect.right - modal.offsetWidth)}px`;
+                
+                modal.classList.add('show-menu');
+            }
+            
+            // NEW: Logic for image viewer modal
+        chatMessagesContainer.addEventListener('click', (e) => {
+                const clickedImage = e.target.closest('.sent-image, .sent-image-grid img');
+                if (clickedImage) {
+                    e.preventDefault(); // Prevent default image link behavior if any
+                    
+                    // Set the source and alt text for the modal image
+                    const imgSrc = clickedImage.src;
+                    const imgAlt = clickedImage.alt;
+                    modalImage.src = imgSrc;
+                    modalImage.alt = imgAlt;
+                    
+                    // Set the download link and filename
+                    downloadImageButton.href = imgSrc;
+                    downloadImageButton.download = imgAlt;
+                    
+                    // Show the modal
+                    imageModal.style.display = 'flex';
+                }
+            });
+            
+            closeImageModalButton.addEventListener('click', () => {
+                imageModal.style.display = 'none';
+                modalImage.src = '';
+                modalImage.alt = '';
+            });
+
+            // --- UPDATED: Reply logic with dynamic resizing and X button always visible ---
+            replyOption.addEventListener('click', () => {
+                const messageId = activeMessageElement.dataset.messageId;
+                const messageToReplyTo = allMessages[activeChatId].find(m => m.id === messageId);
+                
+                if (!messageToReplyTo) return;
+                
+                // Get the message content for the reply bar preview
+                const messageText = messageToReplyTo.text || 'File Message';
+                
+                replyingToMessage = {
+                    messageId: messageToReplyTo.id,
+                    sender: messageToReplyTo.sender,
+                    text: messageText,
+                };
+                
+                // Show the reply bar
+                const repliedToSenderName = replyingToMessage.sender === 'my' ? 'You' : chatUserName.textContent;
+                const replyBarContent = `
+                    <div class="flex-1 overflow-hidden flex items-center">
+                        <span class="text-sm font-semibold text-gray-700 mr-2">Replying to ${repliedToSenderName}:</span>
+                        <div class="reply-text-container">
+                            <p>${replyingToMessage.text}</p>
+                        </div>
+                    </div>
+                    <button id="clear-reply-button" class="text-gray-500 hover:text-gray-700 flex-shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                `;
+                replyBar.innerHTML = replyBarContent;
+                replyBar.classList.remove('hidden');
+
+                messageInput.focus();
+                messageOptionsModal.classList.remove('show-menu');
+            });
+
+            function clearReply() {
+                replyingToMessage = null;
+                replyBar.innerHTML = '';
+                replyBar.classList.add('hidden');
+            }
+            
+            // --- NEW: Edit logic ---
+            editOption.addEventListener('click', () => {
+                // Get the message text and ID from the message bubble
+                const messageTextElement = activeMessageElement.querySelector('.message-text');
+                const messageText = messageTextElement ? messageTextElement.textContent.replace('(Edited)', '').trim() : '';
+                const messageId = activeMessageElement.dataset.messageId;
+
+                // Set the state for editing
+                editingMessageId = messageId;
+                messageInput.value = messageText;
+
+                // Show the edit bar and preview the text
+                editTextPreview.textContent = messageText;
+                editBar.classList.remove('hidden');
+                
+                // Change the send button icon and color to indicate edit mode
+                sendButton.innerHTML = `<i class="fa-solid fa-check"></i>`;
+                sendButton.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                sendButton.classList.add('bg-green-600', 'hover:bg-green-700');
+
+                messageInput.focus();
+                messageOptionsModal.classList.remove('show-menu');
+                
+                // Hide the reply bar and selected files if they are visible
+                clearReply();
+                selectedFiles = [];
+                renderSelectedMedia();
+            });
+
+            function cancelEdit() {
+                editingMessageId = null;
+                messageInput.value = '';
+                
+                // Hide the edit bar
+                editBar.classList.add('hidden');
+
+                // Reset the send button icon and color
+                sendButton.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                `;
+                sendButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+                sendButton.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            }
+
+            cancelEditButton.addEventListener('click', cancelEdit);
+
+            // --- FIX: Copy function to use a more reliable method due to permissions policy ---
+            copyOption.addEventListener('click', () => {
+                const messageTextElement = activeMessageElement.querySelector('.message-text');
+                let messageText = '';
+
+                if (messageTextElement) {
+                    // Clone the element to avoid modifying the DOM
+                    const tempClone = messageTextElement.cloneNode(true);
+                    // Find and remove the edited tag from the clone
+                    const editedTag = tempClone.querySelector('.edited-tag');
+                    if (editedTag) {
+                        editedTag.remove();
+                    }
+                    // Get the text from the modified clone and trim any whitespace
+                    messageText = tempClone.textContent.trim();
+                } else {
+                    messageText = 'This message contains media and cannot be copied as text.';
+                }
+                
+                const tempTextarea = document.createElement('textarea');
+                tempTextarea.value = messageText;
+                tempTextarea.style.position = 'fixed'; // Avoid scrolling to bottom
+                tempTextarea.style.top = '-9999px';
+                document.body.appendChild(tempTextarea);
+                tempTextarea.focus();
+                tempTextarea.select();
+                
+                try {
+                    document.execCommand('copy');
+                    showToast('Message copied!');
+                } catch (err) {
+                    console.error('Copy failed:', err);
+                    showToast('Failed to copy message.');
+                } finally {
+                    document.body.removeChild(tempTextarea);
+                }
+                
+                messageOptionsModal.classList.remove('show-menu');
+            });
+            // --- END FIX: Copy function ---
+
+            pinOption.addEventListener('click', () => {
+                const isPinned = activeMessageElement.querySelector('.pin-icon');
+                if (isPinned) {
+                    isPinned.remove();
+                    showToast('Message unpinned!');
+                } else {
+                    const pinIcon = document.createElement('i');
+                    pinIcon.className = 'fa-solid fa-thumbtack pin-icon';
+                    const messageTextElement = activeMessageElement.querySelector('.message-text');
+                    if (messageTextElement) {
+                         messageTextElement.prepend(pinIcon);
+                    } else {
+                        // For messages without text, add the icon to the container
+                        activeMessageElement.querySelector('.relative > div').prepend(pinIcon);
+                    }
+                    showToast('Message pinned!');
+                }
+                messageOptionsModal.classList.remove('show-menu');
+            });
+            
+            deleteForYouOption.addEventListener('click', () => {
+                // Find the message in the data and remove it
+                const messageId = activeMessageElement.dataset.messageId;
+                const messageIndex = allMessages[activeChatId].findIndex(m => m.id === messageId);
+                if (messageIndex !== -1) {
+                    allMessages[activeChatId].splice(messageIndex, 1);
+                }
+
+                activeMessageElement.remove();
+                showToast('Message deleted for you.');
+                messageOptionsModal.classList.remove('show-menu');
+            });
+            unsendOption.addEventListener('click', () => {
+                // Find the message in the data and remove it
+                const messageId = activeMessageElement.dataset.messageId;
+                const messageIndex = allMessages[activeChatId].findIndex(m => m.id === messageId);
+                if (messageIndex !== -1) {
+                    allMessages[activeChatId].splice(messageIndex, 1);
+                }
+                
+                activeMessageElement.remove();
+                showToast('Message unsent.');
+                messageOptionsModal.classList.remove('show-menu');
+                // You would need to add server-side logic here to unsend the message for everyone
+            });
+
+            reportMessageOption.addEventListener('click', () => {
+                document.getElementById('report-modal').style.display = 'flex';
+                messageOptionsModal.classList.remove('show-menu');
+            });
+
+            // Handle clicks outside the modal to close it
+            document.addEventListener('click', (e) => {
+                // Check if the click is outside the chat options button and the menu itself
+                if (!chatOptionsMenu.contains(e.target) && !chatOptionsButton.contains(e.target)) {
+                    chatOptionsMenu.classList.remove('show-menu');
+                }
+                // Check if the click is outside the message options modal and the message that triggered it
+                if (!messageOptionsModal.contains(e.target) && !e.target.closest('.message-container')) {
+                    messageOptionsModal.classList.remove('show-menu');
+                }
+            });
+            
+            // --- Chat Options Menu Logic (Corrected to be in the header) ---
+            chatOptionsButton.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent the document click listener from immediately closing it
+                chatOptionsMenu.classList.toggle('show-menu');
+            });
+
+            chatReportOption.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('report-modal').style.display = 'flex';
+                chatOptionsMenu.classList.remove('show-menu');
+            });
+
+            // --- UPDATED: Delete Chat now only clears messages ---
+            chatDeleteOption.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Clear the messages for the active chat
+                allMessages[activeChatId] = [];
+                
+                // Update the last message and time of the chat entry
+                const chat = chatsData.connections.find(c => c.id === activeChatId) || chatsData.requests.find(c => c.id === activeChatId);
+                if (chat) {
+                    chat.lastMessage = '';
+                    chat.time = new Date();
+                }
+
+                // Re-render the chat messages to show the "No messages" view
+                renderMessages(activeChatId);
+                
+                // Re-render the chat list to reflect the cleared conversation
+                renderChatList(currentView === 'connected' ? chatsData.connections : chatsData.requests);
+                
+                showToast('Chat messages deleted.');
+                
+                chatOptionsMenu.classList.remove('show-menu');
+            });
+
+            // --- UPDATED: Block User Logic to delete the chat and return to list ---
+            chatBlockOption.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                if (activeChatId) {
+                    // Find the chat and remove it from the correct array
+                    let chatIndex = chatsData.connections.findIndex(c => c.id === activeChatId);
+                    if (chatIndex !== -1) {
+                        chatsData.connections.splice(chatIndex, 1);
+                    } else {
+                        chatIndex = chatsData.requests.findIndex(c => c.id === activeChatId);
+                        if (chatIndex !== -1) {
+                            chatsData.requests.splice(chatIndex, 1);
+                        }
+                    }
+                    
+                    // Also clear the messages associated with this chat
+                    delete allMessages[activeChatId];
+                    
+                    // Reset active chat state
+                    activeChatId = null;
+                    
+                    // Hide the chat window and show the chat list
+                    chatWindowContainer.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        chatWindowContainer.classList.add('hidden');
+                        chatListContainer.classList.remove('hidden');
+                        renderChatList(currentView === 'connected' ? chatsData.connections : chatsData.requests);
+                    }, 300); // Wait for the transition
+                    
+                    showToast('User has been blocked and chat deleted.');
+                    chatOptionsMenu.classList.remove('show-menu');
+                }
+            });
+
+            // Report Modal Logic
+            reportForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                document.getElementById('report-modal').style.display = 'flex';
+                showLoadingOverlay();
+                // Simulate an API call
+                setTimeout(() => {
+                    hideLoadingOverlay();
+                    showToast('Report submitted. Thank you for your feedback.');
+                    reportForm.reset();
+                }, 2000);
+            });
+
+            cancelReportButton.addEventListener('click', () => {
+                document.getElementById('report-modal').style.display = 'none';
+            });
+            
+            // Mobile Menu Logic
+            document.getElementById('open-hamburger-menu-btn').addEventListener('click', () => {
+                mobileMenu.classList.remove('translate-x-full');
+                mobileMenu.classList.add('translate-x-0');
+                mobileMenuBackdrop.classList.remove('hidden');
+            });
+
+            closeMobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.remove('translate-x-0');
+                mobileMenu.classList.add('translate-x-full');
+                mobileMenuBackdrop.classList.add('hidden');
+            });
+            
+            mobileMenuBackdrop.addEventListener('click', () => {
+                mobileMenu.classList.remove('translate-x-0');
+                mobileMenu.classList.add('translate-x-full');
+                mobileMenuBackdrop.classList.add('hidden');
+            });
+
+            // === PROFILE MANAGEMENT SYSTEM === (Consolidated)
+            const userProfilePic = document.getElementById('user-profile-pic');
+
+            // Profile picture upload functionality
+            if (profilePicContainer && profilePicInput) {
+                profilePicContainer.addEventListener('click', () => {
+                    profilePicInput.click();
+                });
+
+                profilePicInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Validate file type
+                        if (!file.type.startsWith('image/')) {
+                            showToast('Please select an image file.');
+                            return;
+                        }
+                        
+                        // Validate file size (5MB limit)
+                        if (file.size > 5 * 1024 * 1024) {
+                            showToast('Image size must be less than 5MB.');
+                            return;
+                        }
+                        
+                        // Upload to transfer.sh for image hosting
+                        try {
+                            showToast('Uploading image...');
+                            const uploadResponse = await fetch('https://transfer.sh/', {
+                                method: 'PUT',
+                                body: file
+                            });
+                            
+                            if (uploadResponse.ok) {
+                                const imageUrl = await uploadResponse.text();
+                                
+                                // Update preview
+                                if (profilePicPreview) {
+                                    profilePicPreview.src = imageUrl;
+                                }
+                                
+                                showToast('Image uploaded successfully!');
+                            } else {
+                                throw new Error('Upload failed');
+                            }
+                        } catch (error) {
+                            console.error('Error uploading image:', error);
+                            showToast('Failed to upload image. Please try again.');
+                            
+                            // Fallback: show preview locally
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                if (profilePicPreview) {
+                                    profilePicPreview.src = e.target.result;
+                                }
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    }
+                });
+            }
+
+            // Save profile functionality
+            if (saveProfileButton && profileModal) {
+                saveProfileButton.addEventListener('click', () => {
+                    const name = profileNameInput ? profileNameInput.value.trim() : '';
+                    const picSrc = profilePicPreview ? profilePicPreview.src : '';
+
+                    // Validate name
+                    if (!name) {
+                        showToast('Please enter your name.');
+                        return;
+                    }
+
+                    // Save to localStorage
+                    localStorage.setItem('userProfileName', name);
+                    localStorage.setItem('userProfilePic', picSrc);
+                    
+                    // Update header icon
+                    if (userProfilePic && picSrc) {
+                        userProfilePic.src = picSrc;
+                    }
+                    
+                    // Close modal and show success
+                    profileModal.style.display = 'none';
+                    showToast('Profile saved!');
+                });
+            }
+
+            // Load user profile on page load
+            function loadUserProfile() {
+                const savedName = localStorage.getItem('userProfileName');
+                const savedPic = localStorage.getItem('userProfilePic');
+                
+                if (savedPic && userProfilePic) {
+                    userProfilePic.src = savedPic;
+                }
+                if (savedName && profileNameInput) {
+                    profileNameInput.value = savedName;
+                }
+                if (savedPic && profilePicPreview) {
+                    profilePicPreview.src = savedPic;
+                }
+            }
+
+            // Load profile data when page loads
+            loadUserProfile();
+            
+            // Open profile modal when clicking the profile icon
+            if (profileIconButton && profileModal) {
+                profileIconButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Profile button clicked!');
+                    
+                    // Load saved data into modal
+                    const savedName = localStorage.getItem('userProfileName');
+                    const savedPic = localStorage.getItem('userProfilePic');
+
+                    if (savedName && profileNameInput) {
+                        profileNameInput.value = savedName;
+                    }
+                    if (savedPic && profilePicPreview) {
+                        profilePicPreview.src = savedPic;
+                    }
+                    
+                    profileModal.style.display = 'flex';
+                });
+
+                // Close modal when clicking outside of it
+                profileModal.addEventListener('click', (e) => {
+                    if (e.target === profileModal) {
+                        profileModal.style.display = 'none';
+                    }
+                });
+            } else {
+                console.error('Profile button or modal not found:', {
+                    profileIconButton: !!profileIconButton,
+                    profileModal: !!profileModal
+                });
+            }
+
+
+            // === UNIVERSAL SIGN OUT FUNCTIONALITY ===
+            function handleSignOut() {
+                // Clear all authentication data
+                localStorage.removeItem('token');
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('email');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userProfileName');
+                localStorage.removeItem('userProfilePic');
+                
+                // Show success message
+                showToast('You have been signed out successfully.');
+                
+                // Redirect to login page
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1000);
+            }
+            
+            // Sign out button logic for both desktop and mobile
+            const authLinks = document.querySelectorAll('#auth-link');
+            authLinks.forEach(link => {
+                if (link) {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        handleSignOut();
+                    });
+                }
+            });
+            
+            // Fallback for old button IDs
+            if (typeof signOutButton !== 'undefined' && signOutButton) {
+                signOutButton.addEventListener('click', handleSignOut);
+            }
+            if (typeof mobileSignOutButton !== 'undefined' && mobileSignOutButton) {
+                mobileSignOutButton.addEventListener('click', handleSignOut);
+            }
+
+            // Cancel plan button logic
+            cancelPlanButton.addEventListener('click', () => {
+                showModal('Your plan has been cancelled.');
+                // Add actual cancellation action
+            });
+
+            mobileCancelPlanButton.addEventListener('click', () => {
+                showModal('Your plan has been cancelled.');
+                // Add actual cancellation action
+            });
+
+            // Helper to override the alert function to use a custom modal instead
+            window.alert = function(message) {
+                showModal(message);
+            };
+            
+            // Initial load of real data
+            loadChatData();
+
+            // Add a click listener to the reply bar to clear the reply
+            if (replyBar) {
+                replyBar.addEventListener('click', (e) => {
+                    if (e.target.id === 'clear-reply-button' || e.target.closest('#clear-reply-button')) {
+                        clearReply();
+                    }
+                });
+            }
+
+            // Close alert modal
+            if (alertCloseButton) {
+                alertCloseButton.addEventListener('click', hideModal);
+            }
+
+            // --- NEW: Auto-resizing textarea logic ---
+            if (messageInput) {
+                messageInput.addEventListener('input', (e) => {
+                // Reset height to auto to calculate new height
+                messageInput.style.height = 'auto';
+                // Set the new height to the scrollHeight, which is the height of the content
+                messageInput.style.height = messageInput.scrollHeight + 'px';
+
+                // Check if max-height is reached and show a scrollbar if needed
+                if (messageInput.scrollHeight >= 120) {
+                    messageInput.style.overflowY = 'auto';
+                } else {
+                    messageInput.style.overflowY = 'hidden';
+                }
+                });
+            }
+        });
+
+        // Initialize Supabase client
+        // IMPORTANT: Replace 'YOUR_SUPABASE_URL' and 'YOUR_SUPABASE_ANON_KEY' with your actual Supabase project URL and Anon key.
+        const supabaseUrl = 'https://fwlzbipxuaibbgdnhwbk.supabase.co'; // e.g., 'https://abcdefg.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3bHpiaXB4dWFpYmJnZG5od2JrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMzAzMjksImV4cCI6MjA3MTcwNjMyOX0.VZCz75czI1fLNAjNjcaJPi9peLUlN5GUBaPd1Y-hHtQ'; // e.g., 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVC...'
+
+        let supabase = null;
+        if (supabaseUrl !== 'https://fwlzbipxuaibbgdnhwbk.supabase.co' && supabaseKey !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3bHpiaXB4dWFpYmJnZG5od2JrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMzAzMjksImV4cCI6MjA3MTcwNjMyOX0.VZCz75czI1fLNAjNjcaJPi9peLUlN5GUBaPd1Y-hHtQ')
+         {
+            supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        } else {
+            console.warn('Supabase credentials not configured. Profile image upload will not work.');
+        }
+ let chatSubscription = null; // Variable to hold the active Supabase Realtime subscription
+ 
+
+        // Global variables for profile functionality
+        let selectedFile = null;
+        let currentProfilePicUrl = null;
+        
+        // Handle image selection and preview
+        function handleImageSelection(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                const previewUrl = URL.createObjectURL(file);
+                const profilePicPreview = document.getElementById('profile-pic-preview');
+                if (profilePicPreview) {
+                    profilePicPreview.src = previewUrl;
+                }
+                console.log('Image selected and previewed:', file.name);
+            }
+        }
+
+        // Profile Modal Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileIconButton = document.getElementById('profile-icon-button');
+            // Ensure the profile modal element exists before getting its reference
+            const profileModal = document.getElementById('profile-modal');
+            const closeProfileModal = document.getElementById('close-profile-modal');
+            const profilePicPreview = document.getElementById('profile-pic-preview');
+            const profilePicInput = document.getElementById('profile-pic-input');
+            const profileNameInput = document.getElementById('profile-name-input');
+            const saveProfileButton = document.getElementById('save-profile-button');
+            const userProfilePic = document.getElementById('user-profile-pic');
+
+            // Add null checks for modal elements
+            if (!profileModal || !closeProfileModal || !profilePicPreview || !profilePicInput || !profileNameInput || !saveProfileButton || !userProfilePic) {
+                console.error("One or more required profile modal elements were not found in the DOM.");
+                return; // Exit the DOMContentLoaded listener if elements are missing
+            }
+            // Load existing profile data from backend
+            async function loadProfileData() {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                try {
+                    const response = await fetch('/api/profile', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        const profile = await response.json();
+                        currentProfilePicUrl = profile.profile_pic_url;
+
+                        if (profile.name) {
+                            profileNameInput.value = profile.name;
+                            localStorage.setItem('userProfileName', profile.name);
+                        }
+                        if (profile.profile_pic_url) {
+                            profilePicPreview.src = profile.profile_pic_url;
+                            userProfilePic.src = profile.profile_pic_url;
+                            localStorage.setItem('userProfilePic', profile.profile_pic_url);
+                        }
+                        console.log('Profile loaded from database:', profile);
+                    } else {
+                        console.log('No profile found, using localStorage fallback');
+                        loadProfileDataFromLocalStorage();
+                    }
+                } catch (error) {
+                    console.error('Error loading profile:', error);
+                    loadProfileDataFromLocalStorage();
+                }
+            }
+
+            function loadProfileDataFromLocalStorage() {
+                const savedName = localStorage.getItem('userProfileName');
+                const savedPic = localStorage.getItem('userProfilePic');
+                
+                if (savedName) {
+                    profileNameInput.value = savedName;
+                }
+                if (savedPic) {
+                    currentProfilePicUrl = savedPic;
+                    profilePicPreview.src = savedPic;
+                    userProfilePic.src = savedPic;
+                }
+            }
+
+            function getCurrentUserId() {
+                // Extract user ID from stored auth data
+                const authData = localStorage.getItem('currentUser');
+                if (authData) {
+                    try {
+                        const user = JSON.parse(authData);
+                        return user.id;
+                    } catch (e) {
+                        console.error('Error parsing auth data:', e);
+                    }
+                }
+                return null;
+            }
+
+            // Save profile functionality with Supabase storage
+            if (saveProfileButton) {
+                saveProfileButton.addEventListener('click', async () => {
+                    const name = profileNameInput.value.trim();
+                    const userId = getCurrentUserId();
+
+                    if (!userId) {
+                         showToast('Please log in to save your profile.');
+                         return;
+                    }
+
+                    if (!name) {
+                        alert('Please enter your name');
+                        return;
+                    }
+
+                    saveProfileButton.disabled = true;
+                    saveProfileButton.textContent = 'Saving...';
+
+                    try {
+                        let newAvatarUrl = currentProfilePicUrl;
+
+                        // Handle image upload if a new file is selected
+                        if (selectedFile) {
+                             const filePath = `${userId}/${Date.now()}-${selectedFile.name.replace(/[^a-zA-Z0-9_.-]/g, '')}`; // Unique path, sanitize filename
+                             const { data: uploadData, error: uploadError } = await supabase.storage
+                                .from('avatars')
+                                .upload(filePath, selectedFile, {
+                                    cacheControl: '3600',
+                                    upsert: false
+                                });
+
+                            if (uploadError) { // Handle upload errors
+                                throw new Error(`Failed to upload image: ${uploadError.message}`);
+                            }
+                            console.log('New avatar uploaded:', uploadData);
+                            // Delete old avatar file if it exists AND the new one uploaded successfully
+                            if (currentProfilePicUrl) {
+                                try {
+                                    // Extract the path and filename from the old URL for the *avatars* bucket
+                                    // Example: https://[project].supabase.co/storage/v1/object/public/avatars/user-id/old-avatar.jpg
+                                    const pathSegments = currentProfilePicUrl.split('/public/avatars/');
+                                    if (pathSegments.length > 1) {
+                                        const oldFilePathInStorage = pathSegments[1]; // Path relative to the bucket root
+                                         const { error: deleteError } = await supabase.storage
+                                            .from('avatars')
+                                            .remove([oldFilePathInStorage]);
+
+                                        if (deleteError) {
+                                            console.warn('Could not delete old avatar:', deleteError);
+                                        }
+                                    } else {
+                                        console.warn('Could not parse old avatar URL for deletion:', currentProfilePicUrl); // Log if URL format is unexpected
+                                    }
+                                } catch (deleteErr) {
+                                    console.warn('Error deleting old avatar:', deleteErr);
+                                }
+                            }
+
+                            // Get public URL for the newly uploaded image
+                            const { data: urlData } = supabase.storage
+                                .from('avatars')
+                                .getPublicUrl(filePath);
+
+                            newAvatarUrl = urlData.publicUrl;
+                            console.log('New avatar public URL:', newAvatarUrl);
+                        }
+
+                        // Insert or update profiles table in Supabase
+                        const { data: profileData, error: profileError } = await supabase
+                            .from('profiles')
+                            .upsert({
+                                id: userId, // Ensure the ID matches the auth.users ID
+                                name: name,
+                                profile_picture_url: newAvatarUrl // Use the correct column name
+                            }, {
+                                onConflict: 'id'
+                            });
+
+                        if (profileError) {
+                            throw new Error(`Failed to save profile: ${profileError.message}`);
+                        }
+
+                        // Update header profile picture, current URL state, and localStorage
+                        if (newAvatarUrl && userProfilePic) {
+                            userProfilePic.src = newAvatarUrl;
+                            currentProfilePicUrl = newAvatarUrl;
+                            localStorage.setItem('userProfilePic', newAvatarUrl);
+                        }
+                        
+                        localStorage.setItem('userProfileName', name);
+                        selectedFile = null;
+
+                        // Show success toast
+                        showToast('Profile saved successfully!');
+                        profileModal.style.display = 'none';
+
+                    } catch (error) {
+                        console.error('Error saving profile:', error);
+                        showToast(`Error saving profile: ${error.message}`);
+                    } finally {
+                        saveProfileButton.disabled = false;
+                        saveProfileButton.textContent = 'Save Profile';
+                    }
+                });
+            }
+            // Open modal when profile button is clicked
+            if (profileIconButton) {
+                profileIconButton.addEventListener('click', () => {
+                    loadProfileData(); // Load latest data when opening
+                    profileModal.style.display = 'flex';
+                });
+            }
+
+            // Close modal when close button is clicked
+            closeProfileModal.addEventListener('click', () => {
+                profileModal.style.display = 'none';
+            });
+
+            // Close modal when clicking on backdrop (outside modal content)
+            profileModal.addEventListener('click', (e) => {
+                if (e.target === profileModal) {
+                    profileModal.style.display = 'none';
+                }
+            });
+
+            // Load profile data on page load
+            loadProfileData();
+            
+            if (profileIconButton) {
+                profileIconButton.addEventListener('click', function() {
+                    if (profileModal) {
+                        loadProfileData(); // Refresh data when modal opens
+                        profileModal.style.display = 'flex';
+                    }
+                });
+            }
+        });
+        
+        // --- Supabase Realtime Subscription for Chat Messages ---
+        
+        function setupChatSubscription(chatId) {
+             // If there's an existing subscription for this chat, unsubscribe first
+            if (chatSubscription) {
+                chatSubscription.unsubscribe();
+                console.log('Unsubscribed from previous chat.');
+            }
+            
+            if (!supabase || !chatId) {
+                console.warn('Supabase client not initialized or chatId is missing. Cannot setup Realtime subscription.');
+                return;
+            }
+
+            console.log(`Setting up Realtime subscription for chat ID: ${chatId}`);
+            chatSubscription = supabase
+                .channel(`chat_messages:${chatId}`) // Use a unique channel for each chat
+                .on('postgres_changes', { // Use postgres_changes for row level events
+                    channel: `chat_messages:${chatId}`, // Listen on the specific channel
+ event: 'INSERT', // Event type for new rows
+                    schema: 'public',
+                    table: 'chat_messages',
+ filter: `chat_room_id=eq.${chatId}`, // Filter for the specific chat room
+                }, (payload) => {
+                    console.log('Realtime message received:', payload);
+                    const newMessage = payload.new; // The newly inserted message
+                    // Add the new message to our in-memory data
+                    if (!allMessages[chatId]) {
+                        allMessages[chatId] = [];
+                    }
+                    allMessages[chatId].push(newMessage);
+                    renderMessages(chatId); // Re-render the chat messages container
+                })
+                .subscribe();
+            console.log('Realtime subscription started.');
+        }
+    </script>
+
+<script>
+  const openMenuBtn = document.getElementById('open-hamburger-menu-btn');
+  const closeMenuBtn = document.getElementById('close-hamburger-menu-btn');
+  const hamburgerMenu = document.getElementById('hamburger-menu-links');
+
+  // Open and close menu with null checks
+  if (openMenuBtn && hamburgerMenu) {
+    openMenuBtn.addEventListener('click', () => {
+      hamburgerMenu.classList.remove('closed');
+    });
+  }
+  
+  if (closeMenuBtn && hamburgerMenu) {
+    closeMenuBtn.addEventListener('click', () => {
+      hamburgerMenu.classList.add('closed');
+    });
+  }
+
+  // Optional: close menu if user clicks outside
+  if (hamburgerMenu && openMenuBtn) {
+    document.addEventListener('click', (e) => {
+      if (!hamburgerMenu.contains(e.target) && !openMenuBtn.contains(e.target)) {
+        hamburgerMenu.classList.add('closed');
+      }
+    });
+  } 
+</script>
+</body>
+</html>
+

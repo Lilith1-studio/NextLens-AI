@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextLens AI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .hamburger-menu-links.closed {
+            transform: translateX(100%);
+        }
+        .hamburger-menu-links {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-white antialiased text-gray-800 min-h-screen">
+
+    <!-- Header Section -->
+    <header class="bg-white sticky top-0 z-50 shadow-sm">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <!-- Logo Section - Now a clickable link -->
+            <a href="index.html" class="flex items-center space-x-2">
+                <span class="font-bold text-lg text-[#283E4A]">NextLens AI</span>
+            </a>
+            <!-- Navigation Links (Horizontal Menu) -->
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="my-network.html" class="text-gray-600 hover:text-blue-500 transition-colors duration-200">My Network</a>
+                <a href="my-notifications.html" class="text-gray-600 hover:text-blue-500 transition-colors duration-200">My Notifications</a>
+                <a href="job-opportunities.html" class="text-gray-600 hover:text-blue-500 transition-colors duration-200">Job Opportunities</a>
+                <a href="privacy.html" class="text-gray-600 hover:text-blue-500 transition-colors duration-200">Privacy & Policy</a>
+                <a href="contact.html" class="text-gray-600 hover:text-blue-500 transition-colors duration-200">Contact</a>
+                <button id="sign-up-btn-desktop" class="px-5 py-2 rounded-full font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 shadow-md">
+                    Sign Up
+                </button>
+            </nav>
+            <!-- Mobile Menu Button -->
+            <button id="open-hamburger-menu-btn" class="md:hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hamburger Menu -->
+    <div id="hamburger-menu-links" class="hamburger-menu-links closed fixed top-0 right-0 h-full w-2/3 max-w-sm bg-white/80 backdrop-blur-md shadow-lg z-40 p-6 pt-20 overflow-y-auto md:hidden">
+        <button id="close-hamburger-menu-btn" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        <nav class="flex flex-col space-y-4 text-lg text-gray-800">
+            <a href="my-network.html" class="hover:text-gray-600">My Network</a>
+            <a href="my-notifications.html" class="hover:text-gray-600">My Notifications</a>
+            <a href="job-opportunities.html" class="hover:text-gray-600 text-gray-800">Job Opportunities</a>
+            <!-- Updated NextLens AI Link with ID for JavaScript -->
+            <a href="privacy.html" class="hover:text-gray-600">Privacy & Policy</a>
+            <!-- Updated Pricing Link with ID for JavaScript -->
+            <a href="contact.html" class="hover:text-gray-600">Contact</a>
+            <hr class="border-gray-300 my-4">
+            <a id="auth-link" href="#" class="text-red-600 hover:text-red-500 text-left">Sign Out</a>
+        </nav>
+    </div>
+    
+    <!-- Modal for messages -->
+    <div id="info-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-6 rounded-xl shadow-xl max-w-sm w-full relative text-center">
+            <button id="close-modal-btn" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-4"></h3>
+            <p id="modal-message" class="text-gray-600"></p>
+        </div>
+    </div>
+
+    <main class="container mx-auto px-4 py-16">
+        <!-- Hero Section - Responsive Layout -->
+        <section class="grid md:grid-cols-2 gap-8 items-center max-w-5xl mx-auto">
+            <!-- Left Column for Text Content -->
+            <div class="text-center md:text-left">
+                <div class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 mb-4 text-sm font-medium text-blue-800">
+                    Welcome to NextLens AI – Beta Version
+                </div>
+                
+                <!-- Main Headline for all screen sizes -->
+                <h1 id="main-headline" class="text-2xl md:text-5xl font-extrabold leading-tight mb-4 tracking-tight text-[#283E4A]">
+                    Whether you’re a company or talent, discover better connections. Try NextLens AI beta for free today.
+                </h1>
+                
+                <!-- New caption without a border or icon -->
+                <p class="text-lg md:text-xl text-gray-500 mb-8 max-w-2xl mx-auto md:mx-0">
+                    We’re in Beta – and building the future with you. Everything is free right now as we train our AI, and your feedback helps shape what comes next.
+                </p>
+                
+                <div class="flex justify-center md:justify-start">
+                    <button id="start-now-btn" class="px-8 py-3 rounded-full font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200" style="background-color: #0A66C2;">
+                        Start Now
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Right Column for Image (Hidden on mobile) -->
+            <div class="hidden md:block">
+                <!-- Placeholder for an image or graphic -->
+                <div class="bg-gray-200 h-96 rounded-xl flex items-center justify-center text-gray-500">
+                    Image Placeholder
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section with Toggle Bar -->
+        <section class="mt-20">
+            <div class="text-center">
+                <h2 class="text-4xl font-bold mb-4 text-[#283E4A]">
+                    How It Works
+                </h2>
+                <p class="text-lg text-gray-500 mb-8 max-w-2xl mx-auto">
+                    Find out how NextLens AI can transform your connections, whether you're a company or an individual talent.
+                </p>
+                
+                <!-- Toggle Bar -->
+                <div class="inline-flex rounded-full border border-gray-300 bg-gray-100 p-1 mb-8">
+                    <button id="how-it-works-companies-btn" class="px-6 py-2 rounded-full font-medium transition-colors duration-200 bg-white text-gray-800 shadow-md">
+                        Companies
+                    </button>
+                    <button id="how-it-works-talents-btn" class="px-6 py-2 rounded-full font-medium transition-colors duration-200 bg-transparent text-gray-500 hover:text-gray-800">
+                        Talents
+                    </button>
+                </div>
+            </div>
+            <!-- How It Works Content -->
+            <div class="grid md:grid-cols-2 gap-8 items-start max-w-5xl mx-auto">
+                <div id="how-it-works-content" class="p-8 bg-gray-50 rounded-2xl">
+                    <!-- Dynamic content will be rendered here by JavaScript -->
+                </div>
+                
+                <!-- Placeholder for an image or graphic -->
+                <div class="bg-gray-200 h-96 rounded-xl flex items-center justify-center text-gray-500">
+                    Image/Graphic Placeholder
+                </div>
+            </div>
+        </section>
+
+        <!-- Benefits Section with Toggle Bar -->
+        <section class="mt-20">
+            <div class="text-center">
+                <h2 class="text-4xl font-bold mb-4 text-[#283E4A]">
+                    Benefits
+                </h2>
+                <p class="text-lg text-gray-500 mb-8 max-w-2xl mx-auto">
+                    Learn about the key benefits and advantages of using NextLens AI.
+                </p>
+                
+                <!-- Toggle Bar -->
+                <div class="inline-flex rounded-full border border-gray-300 bg-gray-100 p-1 mb-8">
+                    <button id="benefits-companies-btn" class="px-6 py-2 rounded-full font-medium transition-colors duration-200 bg-white text-gray-800 shadow-md">
+                        Companies
+                    </button>
+                    <button id="benefits-talents-btn" class="px-6 py-2 rounded-full font-medium transition-colors duration-200 bg-transparent text-gray-500 hover:text-gray-800">
+                        Talents
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Benefits Content -->
+            <div class="grid md:grid-cols-2 gap-8 items-start max-w-5xl mx-auto">
+                <div id="benefits-content" class="p-8 bg-gray-50 rounded-2xl">
+                    <!-- Dynamic content will be rendered here by JavaScript -->
+                </div>
+                
+                <!-- Placeholder for an image or graphic -->
+                <div class="bg-gray-200 h-96 rounded-xl flex items-center justify-center text-gray-500">
+                    Image/Graphic Placeholder
+                </div>
+            </div>
+        </section>
+
+        <!-- Mutual Value Section -->
+        <section class="mt-20 text-center">
+            <h2 class="text-4xl font-bold mb-4 text-[#283E4A]">
+                Where Opportunities Meet Clarity
+            </h2>
+            <div class="relative bg-white border border-gray-200 rounded-xl p-8 mb-8 max-w-2xl mx-auto shadow-md">
+                <h4 class="text-xl font-bold mb-2">Forget the spam and endless cold messages.</h4>
+                <p class="text-gray-500">
+                    NextLens AI ensures that companies and talents connect only when there’s true alignment.
+                </p>
+            </div>
+        </section>
+        
+        <!-- Community Section -->
+        <section class="mt-20 text-center">
+            <h2 class="text-4xl font-bold mb-4 text-[#283E4A]">
+                Building the Future, Together
+            </h2>
+            <div class="relative bg-white border border-gray-200 rounded-xl p-8 mb-8 max-w-2xl mx-auto shadow-md">
+                <h4 class="text-xl font-bold mb-2">Our Community</h4>
+                <p class="text-gray-500">
+                    You’re Not Just a User – You’re a Builder Too! We’re in beta, and your feedback helps shape the future of NextLens AI. Everyone here is part of building something bigger.
+                </p>
+            </div>
+        </section>
+
+        <!-- Call to Action Section -->
+        <section class="mt-20 px-4">
+            <div class="bg-blue-600 text-white rounded-xl p-8 text-center max-w-4xl mx-auto shadow-lg">
+                <h3 class="text-2xl font-bold mb-2">
+                    Early members get full access for free during beta. Don’t miss out!
+                </h3>
+                <p class="mb-6 opacity-90">
+                    Join our community and help us build the future of connections.
+                </p>
+                <button id="claim-free-access-btn" class="px-8 py-3 rounded-full font-medium bg-black text-white hover:bg-gray-800 transition-colors duration-200">
+                    Claim Free Access
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="bg-gray-800 text-gray-300 py-12 mt-20">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                <!-- About Section -->
+                <div>
+                    <a href="#main-headline" class="hover:text-white transition-colors">
+                        <h5 class="text-xl font-bold text-white mb-4">NextLens AI</h5>
+                    </a>
+                    <p class="text-sm">
+                        The next generation of career building and recruitment, bringing clarity and focus so companies see talent clearly and talents find the right opportunities.
+                    </p>
+                </div>
+                <!-- Links -->
+                <div>
+                    <h5 class="font-bold text-white mb-4">Quick Links</h5>
+                    <ul class="space-y-2">
+                        <li><a href="privacy.html" class="hover:text-white transition-colors">Privacy & Policy</a></li>
+                        <li><a href="contact.html" class="hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-sm">
+                &copy; 2025 NextLens AI. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Simulate authentication status
+            const isUserLoggedIn = false; // Change to 'true' to see 'Sign Out'
+
+            // Elements for the hamburger menu
+            const openMenuBtn = document.getElementById('open-hamburger-menu-btn');
+            const closeMenuBtn = document.getElementById('close-hamburger-menu-btn');
+            const hamburgerMenu = document.getElementById('hamburger-menu-links');
+            const authLinkMobile = document.getElementById('auth-link');
+            const authBtnDesktop = document.getElementById('sign-up-btn-desktop');
+
+            // Toggle hamburger menu
+            openMenuBtn.addEventListener('click', () => {
+                hamburgerMenu.classList.remove('closed');
+            });
+            closeMenuBtn.addEventListener('click', () => {
+                hamburgerMenu.classList.add('closed');
+            });
+
+            // Close menu when clicking outside of it
+            document.addEventListener('click', (event) => {
+                // Check if the click is outside the menu and not on the open button
+                if (!hamburgerMenu.contains(event.target) && !openMenuBtn.contains(event.target)) {
+                    hamburgerMenu.classList.add('closed');
+                }
+            });
+
+            // === UNIVERSAL SIGN OUT FUNCTIONALITY ===
+            function handleSignOut() {
+                // Clear all authentication data
+                localStorage.removeItem('token');
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('email');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userProfileName');
+                localStorage.removeItem('userProfilePic');
+                
+                // Show success message
+                alert('You have been signed out successfully.');
+                
+                // Redirect to login page
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 500);
+            }
+            
+            // Sign out button logic
+            const authLinks = document.querySelectorAll('#auth-link');
+            authLinks.forEach(link => {
+                if (link) {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        handleSignOut();
+                    });
+                }
+            });
+
+            // Update auth links and buttons based on user status
+            function updateAuthLinks() {
+                if (isUserLoggedIn) {
+                    authLinkMobile.textContent = 'Sign Out';
+                    authLinkMobile.href = '#'; // Will be handled by event listener above
+                    authBtnDesktop.textContent = 'NextLens AI';
+                    authBtnDesktop.href = 'nextLensAi.html';
+                    authBtnDesktop.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'text-white', 'shadow-md');
+                    authBtnDesktop.classList.add('bg-transparent', 'border', 'border-gray-300', 'text-gray-600', 'hover:bg-gray-100');
+                } else {
+                    authLinkMobile.textContent = 'Sign Up';
+                    authLinkMobile.href = 'signup.html';
+                    authLinkMobile.classList.remove('text-red-600');
+                    authLinkMobile.classList.add('text-blue-600');
+                    authBtnDesktop.textContent = 'Sign Up';
+                    authBtnDesktop.href = 'signup.html';
+                    authBtnDesktop.classList.remove('bg-transparent', 'border', 'border-gray-300', 'text-gray-600', 'hover:bg-gray-100');
+                    authBtnDesktop.classList.add('bg-blue-600', 'hover:bg-blue-700', 'text-white', 'shadow-md');
+                }
+            }
+            updateAuthLinks();
+
+            // CTA Button Logic
+            const startNowBtn = document.getElementById('start-now-btn');
+            const claimFreeAccessBtn = document.getElementById('claim-free-access-btn');
+
+            function handleCtaClick() {
+                if (isUserLoggedIn) {
+                    window.location.href = 'job-opportunities.html';
+                } else {
+                    window.location.href = 'signup.html';
+                }
+            }
+            
+            startNowBtn.addEventListener('click', handleCtaClick);
+            claimFreeAccessBtn.addEventListener('click', handleCtaClick);
+
+            // How It Works section logic
+            const howItWorksCompaniesBtn = document.getElementById('how-it-works-companies-btn');
+            const howItWorksTalentsBtn = document.getElementById('how-it-works-talents-btn');
+            const howItWorksContent = document.getElementById('how-it-works-content');
+
+            const howItWorksCompanySteps = [
+                {
+                    title: "Step 1 – Post a Job in Minutes",
+                    description: "Create a job listing with all the details you need — position, requirements, and preferences — all in one simple form."
+                },
+                {
+                    title: "Step 2",
+                    description: "Talents apply directly to your job postings by submitting their documents (like resumes, cover letters, or portfolios) right away. Everything you need comes through instantly, no messy emails required."
+                },
+                {
+                    title: "Step 3 – Review & Decide with Ease",
+                    description: "Use the built-in dropdown to accept, reject, waitlist, or request an interview. Your decision automatically updates the talent in real time."
+                },
+                {
+                    title: "Step 4 – Connect & Communicate",
+                    description: "If you want to move forward, simply hit “Connect” to chat with the talent directly inside the platform. No extra tools, no delays — everything happens in one place."
+                }
+            ];
+
+            const howItWorksTalentSteps = [
+                {
+                    title: "Step 1 – Discover Opportunities",
+                    description: "Browse job listings tailored to your skills and interests. No profile setup needed — just explore roles that fit you."
+                },
+                {
+                    title: "Step 2 – Apply with Your Details",
+                    description: "When you find a role you like, submit your application directly with the required details and documents — all inside the platform. No back-and-forth emails."
+                },
+                {
+                    title: "Step 3 – Stay Updated with Notifications",
+                    description: "Track your applications in real-time. Whether you’re Accepted, Rejected, Waitlisted, Pending, or Invited for Interview — every update appears in your notifications, instantly."
+                },
+                {
+                    title: "Step 4 – Connect & Explore Opportunities",
+                    description: "If a company is interested, connect and chat directly within the platform. No spam, no noise — just genuine connections based on mutual interest."
+                }
+            ];
+
+            function renderHowItWorks(userType) {
+                const data = userType === 'companies' ? howItWorksCompanySteps : howItWorksTalentSteps;
+                const title = userType === 'companies' ? "How It Works for Companies" : "How It Works for Talents";
+                let html = `<h3 class="text-2xl font-bold mb-4 text-[#283E4A]">${title}</h3>`;
+                html += `<ul class="space-y-6 text-gray-600">`;
+                data.forEach(step => {
+                    html += `
+                        <li class="flex flex-col">
+                            <h4 class="font-semibold text-gray-800">${step.title}</h4>
+                            <p class="mt-2">${step.description}</p>
+                        </li>
+                    `;
+                });
+                html += `</ul>`;
+                howItWorksContent.innerHTML = html;
+            }
+
+        howItWorksCompaniesBtn.addEventListener('click', () => {
+                howItWorksCompaniesBtn.classList.add('bg-white', 'text-gray-800', 'shadow-md');
+                howItWorksCompaniesBtn.classList.remove('bg-transparent', 'text-gray-500');
+                howItWorksTalentsBtn.classList.remove('bg-white', 'text-gray-800', 'shadow-md');
+                howItWorksTalentsBtn.classList.add('bg-transparent', 'text-gray-500');
+                renderHowItWorks('companies');
+            });
+
+            howItWorksTalentsBtn.addEventListener('click', () => {
+                howItWorksTalentsBtn.classList.add('bg-white', 'text-gray-800', 'shadow-md');
+                howItWorksTalentsBtn.classList.remove('bg-transparent', 'text-gray-500');
+                howItWorksCompaniesBtn.classList.remove('bg-white', 'text-gray-800', 'shadow-md');
+                howItWorksCompaniesBtn.classList.add('bg-transparent', 'text-gray-500');
+                renderHowItWorks('talents');
+            });
+
+            // Benefits section logic
+            const benefitsCompaniesBtn = document.getElementById('benefits-companies-btn');
+            const benefitsTalentsBtn = document.getElementById('benefits-talents-btn');
+            const benefitsContent = document.getElementById('benefits-content');
+
+            const benefitsCompanyData = [
+                {
+                    title: "All-in-One Applications",
+                    description: "Receive applications and submitted items in one place. No messy email chains."
+                },
+                {
+                    title: "Automatic Updates",
+                    description: "Your decisions instantly notify talents—no manual follow-up needed."
+                },
+                {
+                    title: "Simple Communication",
+                    description: "Want to connect? Just start a chat directly within the platform."
+                },
+                {
+                    title: "Affordable & Accessible",
+                    description: "Since this is our beta, it’s 100% free. Later, we’ll always keep pricing fair."
+                }
+            ];
+
+            const benefitsTalentData = [
+                {
+                    title: "Quick Apply",
+                    description: "No need to build a profile — just send your application directly to companies."
+                },
+                {
+                    title: "Simple Results",
+                    description: "Get clear responses from companies — no need to go through extra steps."
+                },
+                {
+                    title: "Daily Opportunity Alerts",
+                    description: "Get notified about new opportunities so you never miss a chance."
+                },
+                {
+                    title: "Direct Communication",
+                    description: "Receive results and chat directly with companies—fast and clear."
+                }
+            ];
+
+            function renderBenefits(userType) {
+                const data = userType === 'companies' ? benefitsCompanyData : benefitsTalentData;
+                const title = userType === 'companies' ? "Benefits for Companies" : "Benefits for Talents";
+                let html = `<h3 class="text-2xl font-bold mb-4 text-[#283E4A]">${title}</h3>`;
+                html += `<ul class="space-y-6 text-gray-600">`;
+                data.forEach(benefit => {
+                    html += `
+                        <li class="flex flex-col">
+                            <div class="flex items-start">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <h4 class="font-semibold text-gray-800">${benefit.title}</h4>
+                            </div>
+                            <p class="mt-2 ml-9">${benefit.description}</p>
+                        </li>
+                    `;
+                });
+                html += `</ul>`;
+                benefitsContent.innerHTML = html;
+            }
+
+            benefitsCompaniesBtn.addEventListener('click', () => {
+                benefitsCompaniesBtn.classList.add('bg-white', 'text-gray-800', 'shadow-md');
+                benefitsCompaniesBtn.classList.remove('bg-transparent', 'text-gray-500');
+                benefitsTalentsBtn.classList.remove('bg-white', 'text-gray-800', 'shadow-md');
+                benefitsTalentsBtn.classList.add('bg-transparent', 'text-gray-500');
+                renderBenefits('companies');
+            });
+
+            benefitsTalentsBtn.addEventListener('click', () => {
+                benefitsTalentsBtn.classList.add('bg-white', 'text-gray-800', 'shadow-md');
+                benefitsTalentsBtn.classList.remove('bg-transparent', 'text-gray-500');
+                benefitsCompaniesBtn.classList.remove('bg-white', 'text-gray-800', 'shadow-md');
+                benefitsCompaniesBtn.classList.add('bg-transparent', 'text-gray-500');
+                renderBenefits('talents');
+            });
+
+            // Initial render
+            renderHowItWorks('companies');
+            renderBenefits('companies');
+        });
+
+        // JavaScript for the modal
+        const infoModal = document.getElementById('info-modal');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+
+        const desktopPricingLink = document.getElementById('pricing-plans-desktop-link');
+        const mobilePricingLink = document.getElementById('pricing-plans-mobile-link');
+        const desktopNextLensAILink = document.getElementById('nextlens-ai-desktop-link');
+        const mobileNextLensAILink = document.getElementById('nextlens-ai-mobile-link');
+        
+        // Function to show the modal with dynamic content
+        function showModal(e, title, message) {
+            e.preventDefault();
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            infoModal.classList.remove('hidden');
+        }
+
+        // Function to hide the modal
+        function hideModal() {
+            infoModal.classList.add('hidden');
+        }
+
+        // Add event listeners for Pricing Plans links
+        desktopPricingLink.addEventListener('click', (e) => {
+            showModal(e, "NextLens AI is currently in beta.", "During this phase, all features are free to use.");
+        });
+        mobilePricingLink.addEventListener('click', (e) => {
+            showModal(e, "NextLens AI is currently in beta.", "During this phase, all features are free to use.");
+        });
+
+        // Add event listeners for NextLens AI links
+        desktopNextLensAILink.addEventListener('click', (e) => {
+            showModal(e, "Feature Not Yet Available", "Our AI works by analyzing job listings to match you with the right opportunities. Since we’re still in beta and building our listings, this feature isn’t available yet.");
+        });
+        mobileNextLensAILink.addEventListener('click', (e) => {
+            showModal(e, "Feature Not Yet Available", "Our AI works by analyzing job listings to match you with the right opportunities. Since we’re still in beta and building our listings, this feature isn’t available yet.");
+        });
+
+        // Add event listener to close the modal
+        closeModalBtn.addEventListener('click', hideModal);
+    </script>
+</body>
+</html>

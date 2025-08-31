@@ -1,0 +1,812 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Notifications</title>
+  <!-- Tailwind CDN --> <script src="https://cdn.tailwindcss.com"></script> <style> body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; } .hamburger-menu-links.closed { transform: translateX(100%); } .hamburger-menu-links { transition: transform 0.3s ease-in-out; } </style>
+  <style>
+    body {
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #fff;
+      padding: 14px 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 200;
+    }
+    .header-title {
+      font-size: 20px;
+      font-weight: bold;
+      color: #007bff;
+    }
+    .hamburger {
+      font-size: 24px;
+      cursor: pointer;
+      border: none;
+      background: none;
+    }
+
+    /* Toggle bar */
+    .toggle-bar {
+      display: flex;
+      overflow-x: auto;
+      overflow-y: hidden;
+      gap: 10px;
+      background: #fff;
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      position: sticky;
+      top: 56px;
+      z-index: 150;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* Internet Explorer 10+ */
+    }
+    .toggle-bar::-webkit-scrollbar {
+      display: none; /* WebKit */
+    }
+    .toggle-bar button {
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      background: #e9ecef;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+      min-width: max-content;
+    }
+    .toggle-bar button.active {
+      background: #007bff;
+      color: white;
+    }
+    .toggle-bar button:hover {
+      background: #d6d9dd;
+    }
+
+    /* Notifications */
+    .notifications-container {
+      padding: 20px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .notification-box {
+      background: white;
+      padding: 16px;
+      margin-bottom: 16px;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      position: relative;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .notification-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 14px rgba(0,0,0,0.15);
+    }
+    .notification-box.unread::before {
+      content: "";
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #007bff;
+    }
+
+    /* Buttons */
+    .btn, .review-btn, .download-btn, .close-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    .btn { background: #007bff; color: white; }
+    .btn:hover { background: #0056b3; }
+    .review-btn { background: #28a745; color: white; }
+    .review-btn:hover { background: #1e7e34; }
+    .download-btn { background: #007bff; color: white; margin-top: 6px; }
+    .download-btn:hover { background: #0056b3; }
+    .close-btn { background: #dc3545; color: white; }
+    .close-btn:hover { background: #a71d2a; }
+
+    /* Dropdown */
+    .status-select {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      width: 100%;
+      background: #f9f9f9;
+      transition: border 0.2s, background 0.2s;
+    }
+    .status-select:focus {
+      border: 1px solid #007bff;
+      background: #fff;
+      outline: none;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 300;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 24px;
+      border-radius: 14px;
+      width: 420px;
+      max-width: 90%;
+      text-align: left;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      animation: fadeIn 0.3s ease;
+    }
+    .modal-content h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 20px;
+      color: #007bff;
+    }
+    .file-item {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .submitted-item-entry {
+        border-bottom: 1px solid #e0e0e0; /* Optional: Add a separator between items */
+        padding-bottom: 10px;
+        margin-bottom: 10px;
+    }
+
+    .submitted-item-entry:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+        margin-bottom: 0;
+    }
+
+     /* Ensure dropdown is above other content */
+     /* This might need adjustment based on your layout */
+    .notification-box {
+         position: relative; /* Ensure z-index works */
+         z-index: 1; /* Default z-index */
+    }
+
+     .submitted-items-dropdown {
+         position: relative; /* Or absolute, depending on desired flow */
+         z-index: 10; /* Higher z-index to be on top */
+         /* Add padding, background, border-radius etc. as needed */
+     }
+
+     /* Flex adjustment for file item */
+     .file-item {
+         display: flex;
+         justify-content: space-between;
+         align-items: center;
+         gap: 10px; /* Space between text and button */
+         flex-wrap: wrap; /* Allow wrapping on small screens */
+     }
+  </style>
+</head>
+<script>
+    // Authentication check - runs when page loads
+    const API_BASE = "/api";
+    
+    async function checkAuthentication() {
+        const token = localStorage.getItem("token");
+        console.log("Checking authentication, token exists:", !!token);
+        
+        if (!token) {
+            console.log("No token found, redirecting to login");
+            window.location.href = "/login.html";
+            return false;
+        }
+        
+        try {
+            console.log("Making auth check request...");
+            const response = await fetch(`${API_BASE}/check-status`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ token })
+            });
+            
+            const data = await response.json();
+            console.log("Auth check response:", data);
+            
+            if (!data.authenticated) {
+                console.log("User not authenticated, clearing storage and redirecting");
+                localStorage.removeItem("token");
+                localStorage.removeItem("email");
+                localStorage.removeItem("userRole");
+                window.location.href = "/login.html";
+                return false;
+            } else {
+                console.log("User authenticated successfully");
+                // Store user data for use in the page
+                localStorage.setItem("currentUser", JSON.stringify(data.user));
+                return true;
+            }
+        } catch (error) {
+            console.error("Auth check failed:", error);
+            window.location.href = "/login.html";
+            return false;
+        }
+    }
+    
+    // Run authentication check when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        checkAuthentication();
+    });
+    
+    // Also run immediately in case DOM is already loaded
+    if (document.readyState === 'loading') {
+        // DOM is still loading
+    } else {
+        // DOM is already loaded
+        checkAuthentication();
+    }
+</script>
+<body>
+
+  <!-- Header -->
+<header class="bg-white sticky top-0 z-50 shadow-sm">
+  <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+    <!-- Logo -->
+    <a href="index.html" class="flex items-center space-x-2">
+      <span class="font-bold text-lg text-[#283E4A]">NextLens AI</span>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex items-center space-x-6">
+      <a href="my-network.html" class="text-gray-600 hover:text-blue-500">My Network</a>
+      <a href="my-notifications.html" class="text-gray-600 hover:text-blue-500">My Notifications</a>
+      <a href="job-opportunities.html" class="text-gray-600 hover:text-blue-500">Job Opportunities</a>
+      <a href="privacy.html" class="text-gray-600 hover:text-blue-500">Privacy & Policy</a>
+      <a href="contact.html" class="text-gray-600 hover:text-blue-500">Contact</a>
+      <button id="sign-up-btn-desktop"
+        class="px-5 py-2 rounded-full font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-md">
+        Sign Up
+      </button>
+    </nav>
+
+    <!-- Mobile Hamburger Button -->
+    <button id="open-hamburger-menu-btn" class="md:hidden">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 6h16M4 12h16m-7 6h7" />
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile Hamburger Menu -->
+<div id="hamburger-menu-links"
+  class="hamburger-menu-links closed fixed top-0 right-0 h-full w-2/3 max-w-sm bg-white/80 backdrop-blur-md shadow-lg z-[250] p-6 pt-20 overflow-y-auto md:hidden">
+  <button id="close-hamburger-menu-btn"
+    class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+      viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+  <nav class="flex flex-col space-y-4 text-lg text-gray-800">
+    <a href="my-network.html" class="hover:text-gray-600">My Network</a>
+    <a href="my-notifications.html" class="hover:text-gray-600">My Notifications</a>
+    <a href="job-opportunities.html" class="hover:text-gray-600">Job Opportunities</a>
+    <a href="privacy.html" class="hover:text-gray-600">Privacy & Policy</a>
+    <a href="contact.html" class="hover:text-gray-600">Contact</a>
+    <hr class="border-gray-300 my-4">
+    <a id="auth-link" href="#" class="text-red-600 hover:text-red-500 text-left">Sign Out</a>
+  </nav>
+</div>
+
+  <!-- Toggle Bar -->
+  <div class="toggle-bar" id="toggleBar"></div>
+
+  <!-- Notifications -->
+  <div class="notifications-container" id="notifications"></div>
+
+  <!-- Submitted Items Modal -->
+  <div class="modal" id="submittedModal">
+    <div class="modal-content">
+      <h3>📂 Submitted Items</h3>
+      <div id="submittedFiles"></div>
+      <div style="margin-top:14px; text-align:center;">
+        <button class="download-btn" onclick="downloadAll()">⬇ Download All</button>
+        <button class="close-btn" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  /********* AUTHENTICATION CHECK AND DATA LOADING **********/
+  let currentUser = null;
+  let notifications = [];
+
+  // Get current user from authentication
+  async function getCurrentUser() {
+    try {
+      const currentUserData = localStorage.getItem('currentUser');
+      if (currentUserData) {
+        currentUser = JSON.parse(currentUserData);
+        return currentUser;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      return null;
+    }
+  }
+
+  // Load real notifications from backend
+  async function loadNotifications() {
+    const token = localStorage.getItem('token');
+    if (!token || !currentUser) {
+      console.error('No token or user found');
+      return []; // Return empty array if no token or user
+    }
+
+    try {
+      const response = await fetch(`/api/notifications?token=${encodeURIComponent(token)}`);
+      if (response.ok) {
+        notifications = await response.json();
+        console.log('Loaded notifications:', notifications);
+        return notifications; // Return fetched data
+      } else {
+        console.error('Failed to load notifications:', response.status);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+      return [];
+    }
+  }
+  /********* CAPTIONS FOR TALENT **********/
+  const captions = {
+    Accepted: (c, p) => `🎉 Congratulations! ${c} has accepted your application for ${p}.`,
+    Rejected: (c, p) => `❌ ${c} has decided not to move forward with your ${p} application.`,
+    Waitlisted: (c, p) => `⏳ Your application for ${p} at ${c} is waitlisted.`,
+    Pending: (c, p) => `🔎 Your application for ${p} at ${c} is under review.`,
+    "Interview Needed": (c, p) => `📅 ${c} would like to interview you for ${p}.`,
+    "Needed to be Connected": (c, p) => `${c} wants to connect with you about ${p}.`,
+    "Connection Request": (c) => `${c} wants to connect with you.`,
+    "Discovered by AI": (c) => `🤖 You were discovered by AI! ${c} is interested in you.`
+  };
+
+  /********* RENDER TOGGLE BAR BASED ON ROLE **********/
+  function renderToggleBar() {
+    const bar = document.getElementById("toggleBar");
+    bar.innerHTML = "";
+    if (!currentUser) return;
+    
+    if (currentUser.role === "talent") {
+      bar.innerHTML = `
+        <button class="active" onclick="filterNotifications('all', event)">View All</button>
+        <button onclick="filterNotifications('unread', event)">Unread</button>
+        <button onclick="filterNotifications('Accepted', event)">Accepted</button>
+        <button onclick="filterNotifications('Rejected', event)">Rejected</button>
+        <button onclick="filterNotifications('Waitlisted', event)">Waitlisted</button>
+        <button onclick="filterNotifications('Pending', event)">Pending</button>
+        <button onclick="filterNotifications('Interview Needed', event)">Interview Needed</button>
+        <button onclick="filterNotifications('Needed to be Connected', event)">Needed to be Connected</button>
+      `;
+    } else if (currentUser.role === "company") {
+      bar.innerHTML = `
+ <button class="active" onclick="filterNotifications('all', event)">View All</button>
+        <button onclick="filterNotifications('unread', event)">Unread</button>
+        <button onclick="filterNotifications('applications', event)">Received Applications</button>
+        <button onclick="filterNotifications('Accepted', event)">Accepted</button>
+        <button onclick="filterNotifications('Rejected', event)">Rejected</button>
+        <button onclick="filterNotifications('Waitlisted', event)">Waitlisted</button>
+        <button onclick="filterNotifications('Pending', event)">Pending</button>
+        <button onclick="filterNotifications('Interview Needed', event)">Interview Needed</button>
+        <button onclick="filterNotifications('Needed to be Connected', event)">Needed to be Connected</button>
+      `;
+ } else {
+      // Default or redirect if role is neither
+    }
+  }
+
+  /********* RENDER NOTIFICATIONS **********/
+  function renderNotifications() {
+    const container = document.getElementById("notifications");
+    container.innerHTML = "";
+
+    if (!currentUser) {
+ container.innerHTML = '<p class="text-center text-gray-600">Please log in to view notifications.</p>';
+      return;
+    }
+
+    if (notifications.length === 0) {
+      container.innerHTML = '<p>No notifications found.</p>';
+      return;
+    }
+
+    notifications.forEach(n => {
+      const box = document.createElement("div");
+      box.className = "notification-box" + (n.is_read === false ? " unread" : "");
+      box.setAttribute('data-status', n.status || n.type || '');
+
+      // Add notification ID for filtering
+      if (n.id) {
+        box.dataset.id = n.id;
+      } else if (n.application_id) {
+        box.dataset.id = 'app-' + n.application_id; // Use application ID as a fallback/distinguisher
+      }
+
+      if (currentUser.role === "talent") {
+        // For talent users, show application status updates with proper captions
+        const talentNotificationStatus = n.status || (n.content && n.content.newStatus) || n.type;
+        const companyName = (n.content && n.content.company) || n.company_name || 'a Company';
+        const jobTitle = (n.content && n.content.jobTitle) || n.job_title || 'a job';
+
+        let notificationContent = n.message; // Start with the direct message if available
+        if (!notificationContent && notificationStatus && captions[notificationStatus]) {
+           // Use caption if no direct message and status matches
+           notificationContent = captions[notificationStatus](companyName, jobTitle);
+        } else if (!notificationContent) {
+           notificationContent = 'You have a new notification.'; // Default message
+        }
+
+        box.innerHTML = `<p>${notificationContent}</p>`;
+        // Show connect button for specific statuses
+        const connectableStatuses = ['Accepted', 'Interview Needed', 'Needed to be Connected'];
+
+        if (connectableStatuses.includes(talentNotificationStatus)) {
+          const companyName = (n.content && n.content.company) || n.company_name || 'Company';
+          box.innerHTML += `<button class="connect-btn mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="connectToCompany('${companyName}', '${n.id}')">Connect</button>`; // Use notification id
+ // Note: connectToCompany will need notification.id if it's used to identify the company user ID on the backend. Adjust as needed.
+        } else if (n.type === 'Connection Request' && n.sender_name) { // Handle explicit connection requests
+             box.innerHTML += `<p class="text-gray-600 text-sm mt-2">${n.sender_name} wants to connect with you.</p>`; // Show who wants to connect
+             box.innerHTML += `<button class="connect-btn mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="connectToCompany('${n.sender_name}', '${n.sender_id}')">Connect</button>`; // Use sender_id for connection
+        } else if (n.type === 'Discovered by AI' && n.company_name) { // Handle AI discovery notifications
+             box.innerHTML += `<p class="text-gray-600 text-sm mt-2">${n.company_name} is interested in you!</p>`;
+             box.innerHTML += `<button class="connect-btn mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="connectToCompany('${n.company_name}', '${n.company_id}')">Connect</button>`; // Use company_id for connection
+        }
+
+      }
+
+      if (currentUser.role === "company") {
+        // For company users, show application details
+        const applicantName = n.applicant_name || 'Unknown Applicant';
+        const applicantPhoto = n.applicant_photo || `https://placehold.co/50x50/6b7280/ffffff?text=${applicantName.charAt(0)}`;
+        const currentStatus = n.status || 'Pending';
+
+        box.innerHTML = `
+          <div class="flex items-center space-x-4 mb-4">
+            <img src="${applicantPhoto}" alt="${applicantName}" class="w-12 h-12 rounded-full object-cover border-2 border-gray-200">
+            <div>
+              <p class="font-semibold text-gray-800">${applicantName}</p>
+              <p class="text-gray-600">Applied for <em>${n.job_title}</em></p>
+              <p class="text-gray-500 text-sm">${new Date(n.created_at).toLocaleDateString()}</p>
+            </div>
+ <button class="mark-read-btn text-blue-500 text-sm hover:underline" onclick="markNotificationAsRead('${n.id}')">${n.is_read ? 'Marked as Read' : 'Mark as Read'}</button>
+          </div>
+          <p class="text-gray-700 mb-3">${n.content}</p>
+          <select class="status-select" onchange="updateApplicationStatus(${n.application_id}, this.value, '${applicantName}', '${n.job_title}')">
+            <option value="">-- Select Action --</option>
+            <option value="Accepted" ${currentStatus === 'Accepted' ? 'selected' : ''}>Accept</option>
+            <option value="Rejected" ${currentStatus === 'Rejected' ? 'selected' : ''}>Reject</option>
+            <option value="Interview Needed" ${currentStatus === 'Interview Needed' ? 'selected' : ''}>Interview Needed</option>
+            <option value="Waitlisted" ${currentStatus === 'Waitlisted' ? 'selected' : ''}>Waitlist</option>
+            <option value="Needed to be Connected" ${currentStatus === 'Needed to be Connected' ? 'selected' : ''}>Need to Connect</option>
+            <option value="Pending" ${currentStatus === 'Pending' ? 'selected' : ''}>Keep Pending</option>
+          </select>
+       <div class="submitted-items-dropdown hidden mt-4 p-4 bg-gray-100 rounded-xl">
+        <h4 class="text-lg font-semibold text-gray-800 mb-3">Submitted Items</h4>
+        <div class="submitted-items-content space-y-3">
+            <!-- Submitted items (text/files) will be injected here -->
+       </div>
+    </div>
+          `;
+
+        // Add connect button for specific statuses
+        const connectableStatuses = ['Accepted', 'Interview Needed', 'Needed to be Connected'];
+        if (connectableStatuses.includes(currentStatus)) {
+ box.innerHTML += `<button class="connect-btn mt-3 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors" onclick="connectToUser('${applicantName}', '${applicantPhoto}', '${n.applicant_id}')">Connect</button>`;
+        }
+
+ // Handle other company notification types if any exist beyond applications
+ // e.g., if n.type === 'New Company Feature' etc. Add logic here.
+
+        // Add review files button if there are submitted documents
+        if (n.submitted_items && n.submitted_items.length > 0) { // Assuming submitted_items is an array of {description, type, value/url} objects
+   // Add the "Review Files" button
+    box.innerHTML += `<button class="review-btn ml-2" onclick="toggleSubmittedItems(this)">Review Submitted Items</button>`; // Changed button text and onclick function
+
+    // Populate the hidden dropdown content
+    const submittedItemsContentDiv = box.querySelector('.submitted-items-content');
+    submittedItemsContentDiv.innerHTML = n.submitted_items.map(item => {
+        let itemHtml = `<p class="font-medium text-gray-700 mb-1">${item.description}:</p>`;
+        if (item.type === 'File Upload') {
+            // Assuming item.url is the downloadable URL from Supabase Storage
+            itemHtml += `
+                <div class="file-item flex justify-between items-center bg-white p-3 rounded-md shadow-sm">
+                   <span class="text-sm text-gray-800">${item.url ? item.url.split('/').pop() : 'No file'}</span> <!-- Display filename from URL -->
+                     <button class="download-btn bg-blue-500 text-white px-3 py-1 rounded-md text-xs hover:bg-blue-600 transition-colors" onclick="downloadFile('${item.url}')">Download</button>
+                </div>
+            `;
+        } else if (item.type === 'Text Input') {
+            // Assuming item.value is the text input from the talent
+            itemHtml += `<p class="text-gray-600 text-sm ml-2">${item.value || 'No text provided'}</p>`;
+        } else {
+            itemHtml += `<p class="text-gray-600 text-sm ml-2">Unknown item type.</p>`;
+        }
+        // The previous else if was misplaced inside the else block.
+        // This logic is now correctly placed outside and applies if the type is 'Text Input'.
+        if (item.type === 'Text Input') {
+          const urlPattern = /^(https?:\/\/|www\.)\S+/i;
+          if (item.value && urlPattern.test(item.value)) {
+                itemHtml += `<p class="text-gray-600 text-sm ml-2"><a href="${item.value.startsWith('http') ? item.value : '//' + item.value}" target="_blank" class="text-blue-600 hover:underline">${item.value}</a></p>`;
+ } else {
+                itemHtml += `<p class="text-gray-600 text-sm ml-2">${item.value || 'No text provided'}</p>`;
+ }
+ }
+        return `<div class="submitted-item-entry">${itemHtml}</div>`; // Container for each item
+    }).join('');
+}
+      }
+    container.appendChild(box);
+    });
+  }
+
+  /********* MARK NOTIFICATION AS READ **********/
+  async function markNotificationAsRead(notificationId) {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to mark notifications as read.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/notifications/mark-read', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ token: token, notificationId: notificationId })
+      });
+
+      if (response.ok) {
+        await loadNotifications(); // Reload notifications after marking as read
+        renderNotifications();
+      }
+    } catch (error) { console.error('Error marking notification as read:', error); }
+  }
+
+  /********* FILTER NOTIFICATIONS **********/
+  function filterNotifications(type, event) {
+    const boxes = document.querySelectorAll(".notification-box");
+    boxes.forEach(b => b.style.display = "block");
+
+    if (type !== "all") {
+      boxes.forEach((b, i) => {
+        const n = notifications.find(notif => notif.id === b.dataset.id); // Find notification by ID
+        if (!n) return;
+
+        let shouldHide = false;
+        
+        if (type === "unread" && !b.classList.contains("unread")) {
+          shouldHide = true;
+        } else if (type === "applications" && currentUser.role === "company" && !n.applicant_name) {
+          shouldHide = true;
+        } else if (["Accepted","Rejected","Waitlisted","Pending","Interview Needed","Needed to be Connected"].includes(type)) {
+          // Check notification status for filtering
+          const notificationStatus = n.status || (n.content && n.content.newStatus) || n.type;
+          if (notificationStatus !== type) {
+            shouldHide = true;
+          }
+        }
+
+        if (shouldHide) {
+          b.style.display = "none";
+        }
+      });
+    }
+    document.querySelectorAll(".toggle-bar button").forEach(btn => btn.classList.remove("active"));
+    event.target.classList.add("active");
+  }
+  function toggleSubmittedItems(buttonElement) {
+        const notificationBox = buttonElement.closest('.notification-box');
+        if (!notificationBox) return;
+
+        const submittedItemsDropdown = notificationBox.querySelector('.submitted-items-dropdown');
+        if (submittedItemsDropdown) {
+            submittedItemsDropdown.classList.toggle('hidden'); // Toggle visibility
+            // Ensure other dropdowns are closed if needed
+        }
+    // Keep the downloadFile function as it's used within the dropdown
+    function downloadFile(url) {
+        // Assuming the URL is a direct link to the file in Supabase Storage
+        if (url) {
+            const link = document.createElement("a");
+            link.href = url;
+            link.target = '_blank'; // Open in new tab (optional, but good for files)
+            link.download = url.split('/').pop(); // Suggest filename from URL
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            console.error('Invalid file URL:', url);
+            // Optionally show a message to the user
+        }
+    }
+  /********* UPDATE APPLICATION STATUS FUNCTION **********/
+  async function updateApplicationStatus(applicationId, newStatus, applicantName, jobTitle) {
+    if (!newStatus) return;
+    
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Please log in to update application status.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/update-application-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          token: token,
+          applicationId: applicationId,
+          newStatus: newStatus
+        })
+      });
+
+      if (response.ok) {
+        // Update the local notification status (optional, a reload is better)
+        const notification = notifications.find(n => n.application_id === applicationId);
+        if (notification) {
+          notification.status = newStatus;
+        }
+        
+        // Re-render notifications to show updated status and connect button
+        renderNotifications();
+        
+        alert(`Application status updated to: ${newStatus}`);
+      } else {
+        const error = await response.json();
+        alert(`Failed to update status: ${error.error}`);
+      }
+    } catch (error) {
+      console.error('Error updating application status:', error);
+      alert('Failed to update application status. Please try again.');
+    }
+  }
+
+  /********* CONNECT FUNCTIONS **********/
+  function connectToUser(userName, userPic, targetUserId) { // Connect to a user by ID
+    // Store connection info for automatic chat opening
+    localStorage.setItem('autoOpenChat', JSON.stringify({
+      name: userName, // Name of the user you want to chat with
+      pic: userPic, // User's profile picture URL
+      id: targetUserId // The Supabase user ID of the person you want to chat with
+    }));
+    // Navigate to my-network.html which will auto-open the chat
+ console.log('Redirecting to my-network.html to connect with user:', targetUserId);
+    window.location.href = 'my-network.html';
+  }
+
+  function connectToCompany(companyName, companyUserId) { // Connect to a company by user ID
+    // Store connection info for automatic chat opening
+    localStorage.setItem('autoOpenChat', JSON.stringify({
+      name: companyName, // Name of the company you want to chat with
+      pic: 'https://placehold.co/50x50/4f46e5/ffffff?text=' + companyName.charAt(0), // Placeholder or company logo URL
+      id: companyUserId // The Supabase user ID of the company's account
+    }));
+    // Navigate to my-network.html which will auto-open the chat
+ console.log('Redirecting to my-network.html to connect with company:', companyUserId);
+    window.location.href = 'my-network.html';
+  }
+
+  /********* INIT **********/
+  // --- Initialization after DOM is loaded ---
+  async function initializePage() {
+    await getCurrentUser();
+    if (currentUser) {
+      // Fetch notifications only after user is authenticated
+      await loadNotifications();
+      renderToggleBar();
+      renderNotifications();
+    } else {
+      console.error('No user found, notifications may not load properly');
+      renderToggleBar();
+      renderNotifications();
+    }
+  }
+
+  // Initialize the page
+  initializePage();
+</script>
+
+<script>
+  const openMenuBtn = document.getElementById('open-hamburger-menu-btn');
+  const closeMenuBtn = document.getElementById('close-hamburger-menu-btn');
+  const hamburgerMenu = document.getElementById('hamburger-menu-links');
+
+  // Open and close menu
+  openMenuBtn.addEventListener('click', () => {
+    hamburgerMenu.classList.remove('closed');
+  });
+  closeMenuBtn.addEventListener('click', () => {
+    hamburgerMenu.classList.add('closed');
+  });
+
+  // === UNIVERSAL SIGN OUT FUNCTIONALITY ===
+  function handleSignOut() {
+    // Clear all authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('email');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userProfileName');
+    localStorage.removeItem('userProfilePic');
+    
+    // Show success message
+    alert('You have been signed out successfully.');
+    
+    // Redirect to login page
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 500);
+  }
+  
+  // Sign out button logic
+  const authLinks = document.querySelectorAll('#auth-link');
+  authLinks.forEach(link => {
+    if (link) {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleSignOut();
+      });
+    }
+  });
+
+   // Optional: close menu if user clicks outside
+ document.addEventListener('click', (e) => {
+   if (!hamburgerMenu.contains(e.target) && !openMenuBtn.contains(e.target)) {
+     hamburgerMenu.classList.add('closed');
+   }
+ });
+}
+  
+</script>
+</body>
+</html>

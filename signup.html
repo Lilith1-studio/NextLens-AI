@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sign Up - NextLens AI</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #000;
+        }
+
+        header {
+            background-color: white;
+            color: black;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        header .logo {
+            color: black;
+        }
+
+        .signup-container {
+            max-width: 400px;
+            background: white;
+            margin: 60px auto;
+            padding: 30px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        input, select {
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .password-container {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: #333;
+        }
+
+        button.signup-btn {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #0052cc;
+            color: white;
+            border: none;
+            font-weight: bold;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button.signup-btn:hover {
+            background-color: #003d99;
+        }
+
+        .extra-link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .extra-link a {
+            color: #333;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .extra-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        footer {
+            background-color: #2d3a4d;
+            color: white;
+            padding: 40px;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+        
+        .footer-logo-section {
+            max-width: 500px;
+        }
+
+        .footer-logo-section .logo {
+            font-size: 26px;
+            font-weight: bold;
+            cursor: default;
+            color: white;
+        }
+
+        .footer-logo-section p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+
+        .footer-links-section h3 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .footer-links-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links-section a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .footer-links-section a:hover {
+            text-decoration: underline;
+        }
+
+        .footer-copyright {
+            text-align: center;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .footer-links-section {
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo" onclick="location.href='index.html'">NextLens AI</div>
+    </header>
+
+    <div class="signup-container">
+        <h1>Create Your Account</h1>
+        <form id="signupForm">
+            <label>Select Your Role</label>
+            <select id="role" required>
+                <option value="talent" selected>Talent</option>
+                <option value="company">Company</option>
+            </select>
+
+            <label>Email</label>
+            <input type="email" id="email" required />
+
+            <label>Password</label>
+            <div class="password-container">
+                <input type="password" id="password" required />
+                <button type="button" class="toggle-password" id="togglePassword">Show</button>
+            </div>
+
+            <button type="submit" class="signup-btn">Sign Up</button>
+            <div class="error" id="error"></div>
+            <div class="extra-link">
+                Already have an account? <a href="login.html">Log in here</a>
+            </div>
+        </form>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo-section">
+                <div class="logo">NextLens AI</div>
+                <p>The next generation of career building and recruitment, bringing clarity and focus so companies see talent clearly and talents find the right opportunities.</p>
+            </div>
+            <div class="footer-links-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="/privacy.html">Privacy & Policy</a></li>
+                    <li><a href="/contact.html">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-copyright">
+            <p>&copy; 2025 NextLens AI. All rights reserved.</p>
+        </div>
+    </footer>
+
+<script>
+        const API_BASE = "/api"; // Backend API URL (relative path)
+
+        // Show/hide password functionality
+        const passwordInput = document.getElementById('password');
+        const toggleBtn = document.getElementById('togglePassword');
+        const roleSelect = document.getElementById('role');
+        const emailInput = document.getElementById('email');
+
+        if (toggleBtn && passwordInput) {
+            toggleBtn.addEventListener('click', () => {
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                    toggleBtn.textContent = "Hide";
+                } else {
+                    passwordInput.type = "password";
+                    toggleBtn.textContent = "Show";
+                }
+            });
+        }
+
+        // Set initial email placeholder and update on role change
+        const setPlaceholder = () => {
+            if (roleSelect && emailInput) {
+                if (roleSelect.value === 'company') {
+                    emailInput.placeholder = 'e.g., john.doe@yourcompany.com';
+                } else {
+                    emailInput.placeholder = 'e.g., john.doe@email.com';
+                }
+            }
+        };
+
+        if (roleSelect) {
+            roleSelect.addEventListener('change', setPlaceholder);
+            // Set initial placeholder on page load
+            setPlaceholder();
+        }
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value; // Don't trim password
+            // Basic password validation (optional, Supabase also validates)
+            if (password.length < 6) { // Supabase default minimum password length
+                document.getElementById('error').textContent = "Password must be at least 6 characters long.";
+                return;
+            }
+            const role = document.getElementById('role').value;
+            const errorDiv = document.getElementById('error');
+
+ errorDiv.textContent = "";
+
+ try {
+ console.log('Attempting signup with:', { email, role });
+
+ // Send data to backend for Supabase signup
+ const response = await fetch(`${API_BASE}/supabase-signup`, {
+ method: 'POST',
+ headers: {
+ 'Content-Type': 'application/json',
+ },
+ body: JSON.stringify({ email, password, role }),
+ });
+
+ const data = await response.json();
+
+ if (!response.ok) {
+ // Handle backend errors
+ throw new Error(data.error || 'Signup failed');
+ }
+
+ console.log('Supabase signup successful:', data);
+
+ // Store user session and info in local storage
+ // Assuming your backend returns necessary session data upon successful signup
+ // If your backend only returns user ID, you might need a separate login call here
+ // to get the session after signup, or adjust the backend response.
+ // For simplicity, we'll store basic user data returned by the backend for now.
+ localStorage.setItem('token', data.session.access_token);
+     localStorage.setItem('currentUser', JSON.stringify(data.user));
+     
+ // You can also store session tokens if your backend provides them after signup
+ // localStorage.setItem('supabaseSession', JSON.stringify(data.session)); // If backend returns session
+
+ console.log('Signup successful.');
+
+ // Optional: Redirect after a delay
+     setTimeout(() => {
+             window.location.href = "/job-opportunities.html";
+                 }, 500); // You can adjust the delay as needed
+
+
+            } catch (error) {
+                console.error('Signup error details:', error);
+                // Handle specific errors from the fetch request or backend response
+                errorDiv.style.color = 'red';
+                errorDiv.textContent = error.message || 'An error occurred during signup.';
+            }
+        });
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,334 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Chemical Manufacturing</title>
+    <!-- Tailwind CDN --> <script src="https://cdn.tailwindcss.com"></script> <style> body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; } .hamburger-menu-links.closed { transform: translateX(100%); } .hamburger-menu-links { transition: transform 0.3s ease-in-out; } </style>
+    <!-- Use Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+<header class="bg-white sticky top-0 z-50 shadow-sm">
+  <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+    <!-- Logo -->
+    <a href="index.html" class="flex items-center space-x-2">
+      <span class="font-bold text-lg text-[#283E4A]">NextLens AI</span>
+    </a>
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex items-center space-x-6">
+      <a href="my-network.html" class="text-gray-600 hover:text-blue-500">My Network</a>
+      <a href="my-notifications.html" class="text-gray-600 hover:text-blue-500">My Notifications</a>
+      <a href="job-opportunities.html" class="text-gray-600 hover:text-blue-500">Job Opportunities</a>
+      <a href="privacy.html" class="text-gray-600 hover:text-blue-500">Privacy & Policy</a>
+      <a href="contact.html" class="text-gray-600 hover:text-blue-500">Contact</a>
+      <button id="sign-up-btn-desktop"
+        class="px-5 py-2 rounded-full font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-md">
+        Sign Up
+      </button>
+    </nav>
+
+    <!-- Mobile Hamburger Button -->
+    <button id="open-hamburger-menu-btn" class="md:hidden">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24"
+        stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 6h16M4 12h16m-7 6h7" />
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- Mobile Hamburger Menu -->
+<div id="hamburger-menu-links"
+  class="hamburger-menu-links closed fixed top-0 right-0 h-full w-2/3 max-w-sm bg-white/80 backdrop-blur-md shadow-lg z-40 p-6 pt-20 overflow-y-auto md:hidden">
+  <button id="close-hamburger-menu-btn"
+    class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+      viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  </button>
+  <nav class="flex flex-col space-y-4 text-lg text-gray-800">
+    <a href="my-network.html" class="hover:text-gray-600">My Network</a>
+    <a href="my-notifications.html" class="hover:text-gray-600">My Notifications</a>
+    <a href="job-opportunities.html" class="hover:text-gray-600">Job Opportunities</a>
+    <a href="privacy.html" class="hover:text-gray-600">Privacy & Policy</a>
+    <a href="contact.html" class="hover:text-gray-600">Contact</a>
+    <hr class="border-gray-300 my-4">
+    <a id="auth-link" href="#" class="text-red-600 hover:text-red-500 text-left">Sign Out</a>
+  </nav>
+</div>
+    
+    <!-- Main Content Container -->
+    <main class="flex-grow flex items-center justify-center p-4 pt-24">
+        <div class="max-w-5xl w-full bg-white rounded-[3rem] shadow-2xl p-8 lg:p-16 flex flex-col lg:flex-row items-center lg:items-start gap-12 lg:gap-24">
+
+            <!-- Left Section - Text and Contact Info -->
+            <div class="flex-1 text-center lg:text-left">
+                <h3 class="text-sm font-bold text-blue-600 uppercase tracking-widest mb-2">We’re always here to listen</h3>
+                <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight mb-6">We’d love to hear from you — whether it’s feedback, bug reports, new ideas, or partnership opportunities. Reach out anytime.</h1>
+                <p class="text-gray-600 max-w-lg mx-auto lg:mx-0 mb-8">Whether it’s feedback, bug reports, new ideas, or partnership opportunities — our inbox is always open</p>
+            </div>
+
+            <!-- Right Section - Contact Form -->
+            <div class="flex-1 w-full bg-gray-50 rounded-[2.5rem] p-6 sm:p-8 shadow-inner">
+                <form id="contact-form" action="/api/contact" method="POST" class="space-y-6">
+                    <!-- Name Field -->
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                        <input type="text" id="name" name="name" placeholder="Your full name" class="mt-1 block w-full p-4 border border-gray-300 rounded-2xl shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                    </div>
+
+                    <!-- Email Field -->
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="email" name="email" placeholder="your.email@example.com" class="mt-1 block w-full p-4 border border-gray-300 rounded-2xl shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                    </div>
+                    
+                    <!-- Reason for Contact Text Input -->
+                    <div>
+                        <label for="reason_for_contact" class="block text-sm font-medium text-gray-700 mb-1">Reason for Contact</label>
+                        <input type="text" id="reason_for_contact" name="reason_for_contact" placeholder="e.g., Partnership, Feedback, Bug Report" class="mt-1 block w-full p-4 border border-gray-300 rounded-2xl shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
+                    </div>
+
+                    <!-- Message Field -->
+                    <div>
+                        <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                        <textarea id="message" name="message" rows="4" placeholder="Type your message" class="mt-1 block w-full p-4 border border-gray-300 rounded-2xl shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 resize-none"></textarea>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="flex justify-end pt-4">
+                        <button type="submit" class="inline-flex items-center gap-3 py-4 px-8 bg-blue-600 text-white font-semibold rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                            Submit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success/Error Message Box -->
+    <div id="message-box" class="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none opacity-0 transition-opacity duration-300" style="display: none;">
+        <div class="bg-blue-600 text-white px-6 py-4 rounded-full shadow-lg flex items-center space-x-4 pointer-events-auto">
+            <svg id="message-icon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <p id="message-text" class="text-base font-semibold"></p>
+            <button id="close-message-box" class="text-white hover:text-gray-200 focus:outline-none">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <style>
+        /* Custom styles for the message box */
+        .modal-overlay {
+            opacity: 1;
+            /* Pointer events are handled by the inner div */
+            /* display is handled by the JS */
+        }
+
+    </style>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 mt-auto py-8 lg:py-16 px-4">
+        <div class="max-w-4xl mx-auto w-full">
+            <!-- Main Footer Content -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-8 md:space-y-0 mb-8">
+                <!-- Left Section - Logo and Tagline -->
+                <div class="w-full md:w-auto">
+                    <h2 class="text-2xl font-bold text-white mb-2">NextLens AI</h2>
+                    <p class="text-gray-400">The next generation of career building and recruitment, bringing clarity and focus so companies see talent clearly and talents find the right opportunities.</p>
+                </div>
+                
+                <!-- Right Section - Quick Links -->
+                <div class="w-full md:w-auto md:text-right">
+                    <h3 class="text-lg font-bold text-white mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="privacy.html" class="hover:text-white transition-colors">Privacy & Policy</a></li>
+                        <li><a href="contact.html" class="hover:text-white transition-colors">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Separator Line -->
+            <hr class="border-gray-700 my-8">
+
+            <!-- Copyright -->
+            <div class="text-center text-sm text-gray-500">
+                &copy; 2025 NextLens AI. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript for text area auto-resizing and hamburger menu -->
+    <script>
+        // Auto-resizing for the message textarea
+        const textarea = document.getElementById('message');
+        textarea.addEventListener('input', () => {
+            textarea.style.height = 'auto';
+            textarea.style.height = `${textarea.scrollHeight}px`;
+        });
+
+        // The JavaScript for the hamburger menu and form submission
+        document.addEventListener('DOMContentLoaded', () => {
+            const openMenuBtn = document.getElementById('open-hamburger-menu-btn');
+            const closeMenuBtn = document.getElementById('close-hamburger-menu-btn');
+            const hamburgerMenu = document.getElementById('hamburger-menu-links');
+            const form = document.getElementById('contact-form');
+
+            // Open hamburger menu
+            if (openMenuBtn) {
+                openMenuBtn.addEventListener('click', () => {
+                    hamburgerMenu.classList.remove('closed');
+                });
+            }
+            
+            // Close hamburger menu
+            if (closeMenuBtn) {
+                closeMenuBtn.addEventListener('click', () => {
+                    hamburgerMenu.classList.add('closed');
+                });
+            }
+
+            // Close menu when clicking outside of it
+            document.addEventListener('click', (event) => {
+                // Check if the click is outside the menu and not on the open button
+                if (hamburgerMenu && openMenuBtn && !hamburgerMenu.contains(event.target) && !openMenuBtn.contains(event.target)) {
+                    hamburgerMenu.classList.add('closed');
+                }
+            });
+
+            // Contact form submission
+            if (form) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const formData = new FormData(form);
+                    const data = Object.fromEntries(formData.entries());
+                    
+                    try {
+                        const response = await fetch('/api/contact', {
+                            method: form.method, // Use the method from the form
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(data),
+                        });
+
+                        // Check if the response status is OK (200-299)
+                        if (!response.ok) {
+                            const errorResult = await response.json();
+                             // Display error message
+                            showMessageBox('Error: ' + (errorResult.error || 'Something went wrong.'), 'error');
+                            return; // Stop further processing on error
+                        }
+
+                        const result = await response.json();
+                        if (response.ok) {
+                            alert('Success! ' + result.message);
+                            form.reset();
+                        } else {
+                            alert('Error: ' + (result.error || 'Something went wrong. Please try again.'));
+                        }
+                        
+                    } catch (error) {
+                        alert('Network error. Please check your connection and try again.');
+                    }
+                });
+            }
+
+            // Message Box Functionality
+            const messageBox = document.getElementById('message-box');
+            const messageText = document.getElementById('message-text');
+            const messageIcon = document.getElementById('message-icon');
+            const closeMessageBoxBtn = document.getElementById('close-message-box');
+
+            function showMessageBox(message, type = 'success') {
+                messageText.textContent = message;
+                messageBox.style.display = 'flex'; // Use flex to center the box
+
+                // Update icon and color based on type (you might need more icons/colors for error)
+                if (type === 'success') {
+                    messageBox.querySelector('.bg-blue-600').classList.replace('bg-red-600', 'bg-blue-600');
+                    messageIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>'; // Checkmark icon
+                } else if (type === 'error') {
+                     messageBox.querySelector('.bg-blue-600').classList.replace('bg-blue-600', 'bg-red-600');
+                     messageIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>'; // Cross icon
+                }
+
+                // Animate in
+                setTimeout(() => {
+                    messageBox.classList.add('show');
+                    messageBox.classList.remove('pointer-events-none'); // Enable interaction for closing
+                }, 10); // Small delay to allow display: flex to apply before transition
+            }
+
+            if (closeMessageBoxBtn) {
+                closeMessageBoxBtn.addEventListener('click', hideMessageBox);
+            }
+        });
+    </script>
+
+<script>
+  const openMenuBtn = document.getElementById('open-hamburger-menu-btn');
+  const closeMenuBtn = document.getElementById('close-hamburger-menu-btn');
+  const hamburgerMenu = document.getElementById('hamburger-menu-links');
+
+  // Open and close menu
+  openMenuBtn.addEventListener('click', () => {
+    hamburgerMenu.classList.remove('closed');
+  });
+  closeMenuBtn.addEventListener('click', () => {
+    hamburgerMenu.classList.add('closed');
+  });
+
+  // Optional: close menu if user clicks outside
+  document.addEventListener('click', (e) => {
+    if (!hamburgerMenu.contains(e.target) && !openMenuBtn.contains(e.target)) {
+      hamburgerMenu.classList.add('closed');
+    }
+  });
+  
+  // === UNIVERSAL SIGN OUT FUNCTIONALITY ===
+  function handleSignOut() {
+    // Clear all authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('email');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userProfileName');
+    localStorage.removeItem('userProfilePic');
+    
+    // Show success message
+    alert('You have been signed out successfully.');
+    
+    // Redirect to login page
+    setTimeout(() => {
+      window.location.href = 'login.html';
+    }, 500);
+  }
+  
+  // Sign out button logic
+  const authLinks = document.querySelectorAll('#auth-link');
+  authLinks.forEach(link => {
+    if (link) {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleSignOut();
+      });
+    }
+  });
+</script>
+
+</body>
+</html>
+

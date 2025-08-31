@@ -1,6 +1,4 @@
 import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import authRoutes from './authRoutes.js';
 import jobRoutes from './jobRoutes.js';
@@ -11,9 +9,6 @@ import contactRoutes from './contactRoutes.js';
 // Initialize Express app
 const app = express();
 const port = process.env.PORT || 3000;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Middleware for parsing JSON bodies
 app.use(express.json());
@@ -55,14 +50,6 @@ if (typeof contactRoutes === 'function') {
 } else {
     console.error('contactRoutes is not a function. Check the export in contactRoutes.js.');
 }
-
-// Serve static files (frontend)
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Default route: serve index.html
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 // Basic error handling middleware
 app.use((err, req, res, next) => {
