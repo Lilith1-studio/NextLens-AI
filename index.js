@@ -1,4 +1,6 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import authRoutes from './authRoutes.js';
 import jobRoutes from './jobRoutes.js';
@@ -10,25 +12,24 @@ import contactRoutes from './contactRoutes.js';
 const app = express();
 const port = process.env.PORT || 3000;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Middleware for parsing JSON bodies
 app.use(express.json());
 
 // --- Centralized Supabase Client Initialization ---
-// It is crucial to use environment variables for Supabase credentials for security.
-// Do NOT hardcode them in the source code.
 const supabaseUrl = process.env.SUPABASE_URL || 'https://fwlzbipxuaibbgdnhwbk.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3bHpiaXB4dWFpYmJnZG5od2JrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjEzMDMyOSwiZXhwIjoyMDcxNzA2MzI5fQ.UtW-v-1gClI2N2aXyBl2hBvTf2i2g1O2f4W2Lz_2k5A'; // Replace with your actual key if not using env vars
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3bHpiaXB4dWFpYmJnZG5od2JrIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjEzMDMyOSwiZXhwIjoyMDcxNzA2MzI5fQ.UtW-v-1gClI2N2aXyBl2hBvTf2i2g1O2f4W2Lz_2k5A';
 
 if (!supabaseUrl || !supabaseServiceKey) {
     console.error('Supabase URL and Service Role Key are required.');
-    process.exit(1); // Exit if credentials are not provided
+    process.exit(1);
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // --- Route Definitions ---
-// Pass the initialized Supabase client to each route handler.
-// This is a good practice as it allows for a single, centralized Supabase client.
 if (typeof authRoutes === 'function') {
     app.use('/api/auth', authRoutes(supabase));
 } else {
@@ -55,12 +56,13 @@ if (typeof contactRoutes === 'function') {
     console.error('contactRoutes is not a function. Check the export in contactRoutes.js.');
 }
 
-app.get('/', (req, res) => {
-  res.send('Server is running');
-});
+// Serve static files (frontend)
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve static files from the 'public' directory
-app.use(express.static('public'));
+// Default route: serve index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 // Basic error handling middleware
 app.use((err, req, res, next) => {
@@ -70,5 +72,5 @@ app.use((err, req, res, next) => {
 
 // Start the server
 app.listen(port, () => {
-    console.log('Server started');
+    console.log(`Server is running on port ${port}`);
 });
