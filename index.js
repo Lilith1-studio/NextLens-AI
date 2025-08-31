@@ -1,17 +1,31 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
-import authRoutes from './authRoutes.js';
-import jobRoutes from './jobRoutes.js';
-import chatRoutes from './chatRoutes.js';
-import notificationRoutes from './notificationRoutes.js';
-import contactRoutes from './contactRoutes.js';
+import authRoutes from './routes/authRoutes.js';
+import jobRoutes from './routes/jobRoutes.js';
+import chatRoutes from './routes/chatRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
 
 // Initialize Express app
 const app = express();
 const port = process.env.PORT || 3000;
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Middleware for parsing JSON bodies
 app.use(express.json());
+
+// --- Static File Serving (BEFORE API Routes) ---
+// Serve everything inside "public" as static files
+app.use(express.static(path.join(__dirname, "public")));
+
+// Optional: send index.html when someone visits "/"
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 // --- Centralized Supabase Client Initialization ---
 const supabaseUrl = process.env.SUPABASE_URL || 'https://fwlzbipxuaibbgdnhwbk.supabase.co';
@@ -24,7 +38,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-// --- Route Definitions ---
+// --- API Route Definitions ---
 if (typeof authRoutes === 'function') {
     app.use('/api/auth', authRoutes(supabase));
 } else {
